@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>모아텐 — 합쳐서 10</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#FAF8F1">
+<link rel="icon" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<style>
+  /* ===== 모눈종이(방안지) 콘셉트 ===== */
+  :root{
+    --paper:#FAF8F1;
+    --grid-line:#D8E4EC;
+    --ink:#3B4652;
+    --ink-soft:#7C8894;
+    --stamp:#D9483B;
+    --marker:#FFE590;        /* 형광펜 노랑 */
+    --marker-ok:#C9F0C4;     /* 합=10 초록 */
+    --card:#FFFFFF;
+    --shadow:0 4px 14px rgba(59,70,82,.12);
+    --radius:14px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    font-family:'Jua',system-ui,-apple-system,'Malgun Gothic',sans-serif;
+    color:var(--ink);
+    background:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
+      var(--paper);
+    background-size:24px 24px, 24px 24px, auto;
+    display:flex; flex-direction:column; align-items:center;
+    overflow:hidden;
+    user-select:none; -webkit-user-select:none;
+  }
+
+  /* ===== 상단 정보 ===== */
+  #top{
+    width:100%; max-width:440px;
+    padding:10px 14px 6px;
+    display:flex; align-items:flex-end; justify-content:space-between; gap:8px;
+  }
+  #title{font-size:22px; line-height:1; letter-spacing:-.5px;}
+  #title small{display:block; font-size:11px; color:var(--ink-soft); margin-top:3px; letter-spacing:0;}
+  .stat{text-align:right;}
+  .stat .label{font-size:11px; color:var(--ink-soft);}
+  .stat .value{font-size:22px; line-height:1.05;}
+  #best .value{font-size:15px; color:var(--ink-soft);}
+
+  /* ===== 타이머 바 ===== */
+  #timerWrap{
+    width:100%; max-width:440px; padding:4px 14px 8px;
+  }
+  #timerTrack{
+    height:10px; background:#E8EFF4; border-radius:99px; overflow:hidden;
+    border:1px solid var(--grid-line);
+  }
+  #timerFill{
+    height:100%; width:100%;
+    background:linear-gradient(90deg,#8FC7A9,#F2C94C 70%,#E07A5F);
+    border-radius:99px;
+    transition:none;
+  }
+
+  /* ===== 게임판 ===== */
+  #boardWrap{
+    position:relative;
+    flex:1; width:100%; max-width:440px;
+    display:flex; align-items:flex-start; justify-content:center;
+    padding:0 10px;
+    min-height:0;
+  }
+  #board{
+    position:relative;
+    background:var(--card);
+    border:1.5px solid var(--grid-line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    touch-action:none;
+    display:grid;
+  }
+  .cell{
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px; color:var(--ink);
+    border-radius:6px;
+    position:relative;
+    transition:background .08s;
+  }
+  .cell.sel{background:var(--marker);}
+  .cell.sel.ok{background:var(--marker-ok);}
+  .cell.empty{color:transparent;}
+  .cell.empty::after{
+    content:''; position:absolute; inset:38%;
+    border-radius:50%; background:var(--grid-line); opacity:.5;
+  }
+
+  /* 선택 사각형 */
+  #selRect{
+    position:absolute; pointer-events:none;
+    border:2px dashed rgba(217,72,59,.55);
+    border-radius:8px; display:none;
+  }
+  /* 합계 배지 */
+  #sumBadge{
+    position:absolute; pointer-events:none; display:none;
+    background:var(--ink); color:#fff;
+    font-size:14px; padding:3px 10px; border-radius:99px;
+    transform:translate(-50%,-140%);
+    z-index:5; white-space:nowrap;
+  }
+  #sumBadge.ok{background:#2E9E5B;}
+
+  /* 十 도장 효과 */
+  .stampFx{
+    position:absolute; pointer-events:none; z-index:6;
+    color:var(--stamp); font-size:44px;
+    border:3px solid var(--stamp); border-radius:10px;
+    width:58px; height:58px;
+    display:flex; align-items:center; justify-content:center;
+    transform:translate(-50%,-50%) rotate(-8deg) scale(1.6);
+    opacity:0;
+    animation:stampIn .55s ease-out forwards;
+  }
+  @keyframes stampIn{
+    0%{opacity:0; transform:translate(-50%,-50%) rotate(-8deg) scale(1.8);}
+    35%{opacity:.95; transform:translate(-50%,-50%) rotate(-8deg) scale(1);}
+    75%{opacity:.9;}
+    100%{opacity:0; transform:translate(-50%,-50%) rotate(-8deg) scale(.96);}
+  }
+  .plusFx{
+    position:absolute; pointer-events:none; z-index:7;
+    color:#2E9E5B; font-size:20px;
+    transform:translate(-50%,-50%);
+    animation:floatUp .8s ease-out forwards;
+  }
+  @keyframes floatUp{
+    0%{opacity:0; transform:translate(-50%,-30%);}
+    25%{opacity:1;}
+    100%{opacity:0; transform:translate(-50%,-160%);}
+  }
+
+  /* ===== 오버레이(시작/종료) ===== */
+  .overlay{
+    position:fixed; inset:0; z-index:20;
+    background:rgba(250,248,241,.92);
+    backdrop-filter:blur(3px);
+    display:flex; align-items:center; justify-content:center;
+    padding:20px;
+  }
+  .panel{
+    width:100%; max-width:360px;
+    background:var(--card);
+    border:1.5px solid var(--grid-line);
+    border-radius:18px;
+    box-shadow:var(--shadow);
+    padding:26px 22px 22px;
+    text-align:center;
+    max-height:86vh; overflow-y:auto;
+  }
+  .panel h1{font-size:30px; letter-spacing:-1px;}
+  .panel h1 .ten{color:var(--stamp);}
+  .panel .rule{
+    font-size:14px; color:var(--ink-soft); line-height:1.7;
+    margin:14px 0 18px;
+  }
+  .panel .rule b{color:var(--ink);}
+  .demoRow{
+    display:flex; gap:6px; justify-content:center; margin:10px 0 4px;
+  }
+  .demoRow span{
+    width:34px; height:34px; display:flex; align-items:center; justify-content:center;
+    background:var(--marker); border-radius:8px; font-size:17px;
+  }
+  .demoRow .eq{background:none; font-size:17px; width:auto;}
+  .demoRow .res{background:var(--marker-ok);}
+
+  .btn{
+    font-family:inherit; font-size:18px;
+    border:none; cursor:pointer;
+    background:var(--stamp); color:#fff;
+    padding:13px 0; width:100%;
+    border-radius:12px;
+    box-shadow:0 3px 0 #B03528;
+    margin-top:10px;
+  }
+  .btn:active{transform:translateY(2px); box-shadow:0 1px 0 #B03528;}
+  .btn.sub{
+    background:#fff; color:var(--ink);
+    border:1.5px solid var(--grid-line);
+    box-shadow:0 3px 0 var(--grid-line);
+    font-size:15px;
+  }
+
+  #finalScore{font-size:52px; color:var(--stamp); line-height:1.1; margin:6px 0 2px;}
+  #newBest{font-size:13px; color:#2E9E5B; height:18px;}
+
+  #nameRow{display:flex; gap:8px; margin:12px 0 4px;}
+  #nameInput{
+    flex:1; font-family:inherit; font-size:15px;
+    border:1.5px solid var(--grid-line); border-radius:10px;
+    padding:10px 12px; color:var(--ink); background:var(--paper);
+    text-align:center;
+  }
+  #nameInput:focus{outline:2px solid var(--marker);}
+
+  /* 랭킹 */
+  .tabs{display:flex; gap:6px; margin:14px 0 8px;}
+  .tab{
+    flex:1; font-family:inherit; font-size:13px; cursor:pointer;
+    padding:8px 0; border-radius:9px;
+    border:1.5px solid var(--grid-line); background:#fff; color:var(--ink-soft);
+  }
+  .tab.on{background:var(--ink); color:#fff; border-color:var(--ink);}
+  #rankList{
+    text-align:left; font-size:14px;
+    border:1.5px solid var(--grid-line); border-radius:12px;
+    max-height:180px; overflow-y:auto;
+    background:var(--paper);
+  }
+  .rankRow{
+    display:flex; align-items:center; gap:10px;
+    padding:7px 12px;
+    border-bottom:1px dashed var(--grid-line);
+  }
+  .rankRow:last-child{border-bottom:none;}
+  .rankRow .no{width:26px; color:var(--ink-soft); font-size:12px;}
+  .rankRow .nm{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .rankRow .sc{color:var(--stamp);}
+  .rankRow.me{background:var(--marker);}
+  .rankNote{font-size:12px; color:var(--ink-soft); padding:14px 10px; text-align:center; line-height:1.6;}
+
+  /* ===== 광고 자리 ===== */
+  #adSlot{
+    width:100%; max-width:440px;
+    height:62px; flex-shrink:0;
+    margin:6px auto 8px;
+    display:flex; align-items:center; justify-content:center;
+    border:2px dashed var(--grid-line);
+    border-radius:10px;
+    color:var(--ink-soft); font-size:12px;
+    background:rgba(255,255,255,.6);
+  }
+</style>
+</head>
+<body>
+
+  <div id="top">
+    <div id="title">모아텐<small>드래그해서 합 10 만들기</small></div>
+    <div class="stat" id="best"><div class="label">최고</div><div class="value" id="bestVal">0</div></div>
+    <div class="stat"><div class="label">점수</div><div class="value" id="scoreVal">0</div></div>
+  </div>
+
+  <div id="timerWrap"><div id="timerTrack"><div id="timerFill"></div></div></div>
+
+  <div id="boardWrap">
+    <div id="board">
+      <div id="selRect"></div>
+      <div id="sumBadge">0</div>
+    </div>
+  </div>
+
+  <!-- ▼▼▼ 광고 자리: 나중에 AdMob/애드센스 코드를 이 div 안에 넣으면 됩니다 ▼▼▼ -->
+  <div id="adSlot">광고 영역 (배너 320×50) — 준비 중</div>
+  <!-- ▲▲▲ 광고 자리 끝 ▲▲▲ -->
+
+  <!-- 시작 화면 -->
+  <div class="overlay" id="startOverlay">
+    <div class="panel">
+      <h1>모아<span class="ten">텐</span></h1>
+      <div class="demoRow">
+        <span>3</span><span>7</span><span class="eq">=</span><span class="res">10!</span>
+      </div>
+      <p class="rule">
+        손가락(마우스)으로 <b>네모를 그려</b> 숫자를 묶으세요.<br>
+        묶은 숫자의 합이 <b>정확히 10</b>이면 사라집니다.<br>
+        <b>제한시간 2분</b> 동안 최대한 많이 지우세요!<br>
+        한 번에 많이 지울수록 보너스 점수 🎁
+      </p>
+      <button class="btn" id="startBtn">게임 시작</button>
+    </div>
+  </div>
+
+  <!-- 종료 화면 -->
+  <div class="overlay" id="endOverlay" style="display:none;">
+    <div class="panel">
+      <div style="font-size:15px;color:var(--ink-soft);">이번 판 점수</div>
+      <div id="finalScore">0</div>
+      <div id="newBest"></div>
+
+      <div id="nameRow">
+        <input id="nameInput" maxlength="10" placeholder="닉네임 (랭킹 등록용)">
+      </div>
+
+      <div class="tabs">
+        <button class="tab on" id="tabLocal">내 기록</button>
+        <button class="tab" id="tabOnline">온라인 랭킹</button>
+      </div>
+      <div id="rankList"></div>
+
+      <button class="btn" id="retryBtn">다시 하기</button>
+    </div>
+  </div>
+
+<script>
+/* ============================================================
+   [설정] 온라인 랭킹 서버 주소
+   - 아래 따옴표 안이 비어 있으면: 내 기록(이 기기)만 저장됩니다.
+   - Firebase 무료 데이터베이스 주소를 붙여넣으면
+     전 세계 온라인 랭킹이 자동으로 켜집니다. (가이드 문서 참고)
+   - 예시: const FIREBASE_URL = "https://moaten-abc123-default-rtdb.firebaseio.com";
+   ============================================================ */
+const FIREBASE_URL = "";
+
+/* ===== 기본 설정 ===== */
+const COLS = 9, ROWS = 13;      // 판 크기
+const GAME_TIME = 120;          // 제한시간(초)
+
+/* ===== 저장소(오류 나도 게임은 계속되게) ===== */
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v===null ? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+
+/* ===== 상태 ===== */
+let grid = [];            // 숫자 배열(0 = 빈칸)
+let cells = [];           // 셀 DOM
+let score = 0;
+let best = store.get('moaten_best', 0);
+let playing = false;
+let timeLeft = GAME_TIME;
+let timerId = null;
+let dragging = false;
+let dragStart = null;     // {x,y} 보드 기준 픽셀
+let selSet = new Set();   // 선택된 셀 인덱스
+let cellSize = 40;
+
+const $ = id => document.getElementById(id);
+const board = $('board'), selRect = $('selRect'), sumBadge = $('sumBadge');
+
+$('bestVal').textContent = best;
+
+/* ===== 보드 크기 계산(모바일 대응) ===== */
+function layoutBoard(){
+  const wrap = $('boardWrap');
+  const availW = wrap.clientWidth - 8;
+  const availH = wrap.clientHeight - 8;
+  cellSize = Math.floor(Math.min(availW / COLS, availH / ROWS));
+  cellSize = Math.max(24, Math.min(cellSize, 46));
+  board.style.gridTemplateColumns = `repeat(${COLS}, ${cellSize}px)`;
+  board.style.gridTemplateRows = `repeat(${ROWS}, ${cellSize}px)`;
+  board.style.padding = '6px';
+  cells.forEach(c => c.style.fontSize = Math.round(cellSize*0.5)+'px');
+}
+window.addEventListener('resize', layoutBoard);
+
+/* ===== 새 판 만들기 ===== */
+function newGame(){
+  grid = [];
+  board.querySelectorAll('.cell').forEach(c => c.remove());
+  cells = [];
+  for(let i=0;i<COLS*ROWS;i++){
+    const v = 1 + Math.floor(Math.random()*9);
+    grid.push(v);
+    const d = document.createElement('div');
+    d.className = 'cell';
+    d.textContent = v;
+    board.appendChild(d);
+    cells.push(d);
+  }
+  layoutBoard();
+  score = 0; updateScore(0);
+  timeLeft = GAME_TIME;
+  playing = true;
+  clearInterval(timerId);
+  const t0 = Date.now();
+  timerId = setInterval(()=>{
+    timeLeft = GAME_TIME - (Date.now()-t0)/1000;
+    if(timeLeft <= 0){ timeLeft = 0; endGame(); }
+    $('timerFill').style.width = (timeLeft/GAME_TIME*100)+'%';
+  }, 100);
+}
+
+function updateScore(add){
+  score += add;
+  $('scoreVal').textContent = score;
+}
+
+/* ===== 좌표 → 셀 ===== */
+function boardPos(ev){
+  const r = board.getBoundingClientRect();
+  return { x: Math.min(Math.max(ev.clientX - r.left, 0), r.width-1),
+           y: Math.min(Math.max(ev.clientY - r.top , 0), r.height-1) };
+}
+function cellIndexAt(px, py){
+  const pad = 6;
+  const c = Math.min(COLS-1, Math.max(0, Math.floor((px-pad)/cellSize)));
+  const r = Math.min(ROWS-1, Math.max(0, Math.floor((py-pad)/cellSize)));
+  return r*COLS + c;
+}
+
+/* ===== 드래그 선택 ===== */
+board.addEventListener('pointerdown', ev=>{
+  if(!playing) return;
+  board.setPointerCapture(ev.pointerId);
+  dragging = true;
+  dragStart = boardPos(ev);
+  updateSelection(ev);
+});
+board.addEventListener('pointermove', ev=>{
+  if(dragging) updateSelection(ev);
+});
+board.addEventListener('pointerup', ev=>{
+  if(!dragging) return;
+  dragging = false;
+  commitSelection(ev);
+});
+board.addEventListener('pointercancel', ()=>{ dragging=false; clearSelection(); });
+
+function updateSelection(ev){
+  const p = boardPos(ev);
+  const x1 = Math.min(dragStart.x, p.x), x2 = Math.max(dragStart.x, p.x);
+  const y1 = Math.min(dragStart.y, p.y), y2 = Math.max(dragStart.y, p.y);
+
+  selRect.style.display='block';
+  selRect.style.left = x1+'px'; selRect.style.top = y1+'px';
+  selRect.style.width = (x2-x1)+'px'; selRect.style.height = (y2-y1)+'px';
+
+  const i1 = cellIndexAt(x1,y1), i2 = cellIndexAt(x2,y2);
+  const c1 = i1%COLS, r1 = Math.floor(i1/COLS);
+  const c2 = i2%COLS, r2 = Math.floor(i2/COLS);
+
+  selSet.forEach(i => cells[i].classList.remove('sel','ok'));
+  selSet.clear();
+  let sum = 0;
+  for(let r=r1;r<=r2;r++) for(let c=c1;c<=c2;c++){
+    const i = r*COLS+c;
+    if(grid[i]>0){ selSet.add(i); sum += grid[i]; }
+  }
+  const ok = (sum===10);
+  selSet.forEach(i=>{ cells[i].classList.add('sel'); if(ok) cells[i].classList.add('ok'); });
+
+  sumBadge.style.display = selSet.size ? 'block' : 'none';
+  sumBadge.textContent = '합 '+sum;
+  sumBadge.classList.toggle('ok', ok);
+  sumBadge.style.left = p.x+'px';
+  sumBadge.style.top = Math.max(p.y, 24)+'px';
+}
+
+function clearSelection(){
+  selSet.forEach(i => cells[i].classList.remove('sel','ok'));
+  selSet.clear();
+  selRect.style.display='none';
+  sumBadge.style.display='none';
+}
+
+function commitSelection(ev){
+  let sum = 0;
+  selSet.forEach(i => sum += grid[i]);
+  if(sum===10 && selSet.size>0){
+    const n = selSet.size;
+    let pts = n;
+    if(n>=3) pts += n;              // 3개 이상 한번에: 2배 보너스
+    selSet.forEach(i=>{
+      grid[i]=0;
+      cells[i].classList.add('empty');
+      cells[i].textContent='';
+    });
+    updateScore(pts);
+    if(navigator.vibrate) navigator.vibrate(20);
+
+    // 十 도장 + 점수 이펙트
+    const p = boardPos(ev);
+    const st = document.createElement('div');
+    st.className='stampFx'; st.textContent='十';
+    st.style.left=p.x+'px'; st.style.top=p.y+'px';
+    board.appendChild(st);
+    setTimeout(()=>st.remove(), 600);
+
+    const pf = document.createElement('div');
+    pf.className='plusFx'; pf.textContent='+'+pts;
+    pf.style.left=p.x+'px'; pf.style.top=(p.y-20)+'px';
+    board.appendChild(pf);
+    setTimeout(()=>pf.remove(), 850);
+  }
+  clearSelection();
+}
+
+/* ===== 게임 종료 ===== */
+function endGame(){
+  if(!playing) return;
+  playing = false;
+  clearInterval(timerId);
+  clearSelection();
+
+  $('finalScore').textContent = score;
+  const isBest = score > best;
+  if(isBest){ best = score; store.set('moaten_best', best); $('bestVal').textContent = best; }
+  $('newBest').textContent = isBest ? '🎉 최고 기록 갱신!' : '';
+
+  $('nameInput').value = store.get('moaten_name','');
+
+  saveLocalRank(score);
+  showTab('local');
+  $('endOverlay').style.display='flex';
+
+  submitOnline(score);   // 온라인 랭킹(설정된 경우)
+}
+
+/* ===== 내 기록(이 기기) 랭킹 ===== */
+function saveLocalRank(sc){
+  const list = store.get('moaten_ranks', []);
+  list.push({score:sc, ts:Date.now()});
+  list.sort((a,b)=>b.score-a.score);
+  store.set('moaten_ranks', list.slice(0,10));
+}
+function renderLocal(){
+  const list = store.get('moaten_ranks', []);
+  const box = $('rankList');
+  if(!list.length){ box.innerHTML = '<div class="rankNote">아직 기록이 없습니다.</div>'; return; }
+  box.innerHTML = list.map((r,i)=>{
+    const d = new Date(r.ts);
+    const dateStr = (d.getMonth()+1)+'/'+d.getDate();
+    const me = (r.score===score && !r._shown) ? ' me' : '';
+    if(me) r._shown = true;
+    return `<div class="rankRow${me}"><span class="no">${i+1}</span><span class="nm">${dateStr}</span><span class="sc">${r.score}</span></div>`;
+  }).join('');
+}
+
+/* ===== 온라인 랭킹 (Firebase 무료 DB, 설정 시 자동 작동) ===== */
+let lastSubmitKey = null;
+function esc(s){ return s.replace(/[<>&"']/g, c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c])); }
+
+async function submitOnline(sc){
+  if(!FIREBASE_URL) return;
+  const name = ($('nameInput').value || '무명').slice(0,10);
+  store.set('moaten_name', name);
+  try{
+    const res = await fetch(FIREBASE_URL + '/scores.json', {
+      method:'POST',
+      body: JSON.stringify({ name, score: sc, ts: Date.now() })
+    });
+    const data = await res.json();
+    lastSubmitKey = data && data.name;
+  }catch(e){ /* 인터넷 안 되면 조용히 넘어감 */ }
+}
+
+async function renderOnline(){
+  const box = $('rankList');
+  if(!FIREBASE_URL){
+    box.innerHTML = '<div class="rankNote">온라인 랭킹이 아직 연결되지 않았습니다.<br>(가이드 문서의 "온라인 랭킹 켜기" 참고)</div>';
+    return;
+  }
+  box.innerHTML = '<div class="rankNote">불러오는 중...</div>';
+  try{
+    const res = await fetch(FIREBASE_URL + '/scores.json?orderBy=%22score%22&limitToLast=50');
+    const data = await res.json();
+    if(!data){ box.innerHTML = '<div class="rankNote">아직 등록된 기록이 없습니다.</div>'; return; }
+    const rows = Object.entries(data)
+      .map(([k,v])=>({key:k, ...v}))
+      .sort((a,b)=>b.score-a.score);
+    box.innerHTML = rows.map((r,i)=>{
+      const me = r.key===lastSubmitKey ? ' me' : '';
+      return `<div class="rankRow${me}"><span class="no">${i+1}</span><span class="nm">${esc(String(r.name||'무명'))}</span><span class="sc">${r.score}</span></div>`;
+    }).join('');
+  }catch(e){
+    box.innerHTML = '<div class="rankNote">랭킹을 불러오지 못했습니다.<br>인터넷 연결을 확인해 주세요.</div>';
+  }
+}
+
+/* 닉네임 바꾸면 다시 제출 대신 저장만 */
+$('nameInput').addEventListener('change', ()=>{
+  store.set('moaten_name', ($('nameInput').value||'').slice(0,10));
+});
+
+/* ===== 탭 ===== */
+function showTab(which){
+  $('tabLocal').classList.toggle('on', which==='local');
+  $('tabOnline').classList.toggle('on', which==='online');
+  if(which==='local') renderLocal(); else renderOnline();
+}
+$('tabLocal').onclick = ()=>showTab('local');
+$('tabOnline').onclick = ()=>showTab('online');
+
+/* ===== 버튼 ===== */
+$('startBtn').onclick = ()=>{
+  $('startOverlay').style.display='none';
+  newGame();
+};
+$('retryBtn').onclick = ()=>{
+  $('endOverlay').style.display='none';
+  newGame();
+};
+
+/* 첫 화면 준비 */
+newGame(); playing=false; clearInterval(timerId); // 배경용 보드만 미리 그려두기
+$('timerFill').style.width='100%';
+
+/* 오프라인 지원(앱 요건) */
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
+</script>
+</body>
+</html>

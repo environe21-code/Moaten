@@ -1,0 +1,17 @@
+{
+  "name": "모아텐 — 합쳐서 10",
+  "short_name": "모아텐",
+  "description": "숫자를 묶어 합 10을 만드는 2분 퍼즐 게임",
+  "lang": "ko",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAF8F1",
+  "theme_color": "#FAF8F1",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
