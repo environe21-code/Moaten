@@ -9,18 +9,14 @@
 <link rel="icon" href="icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 <style>
-  /* ===== 모눈종이(방안지) 콘셉트 ===== */
   :root{
     --paper:#FAF8F1;
     --grid-line:#D8E4EC;
     --ink:#3B4652;
     --ink-soft:#7C8894;
     --stamp:#D9483B;
-    --marker:#FFE590;        /* 형광펜 노랑 */
-    --marker-ok:#C9F0C4;     /* 합=10 초록 */
     --card:#FFFFFF;
     --shadow:0 4px 14px rgba(59,70,82,.12);
-    --radius:14px;
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{height:100%;}
@@ -37,112 +33,300 @@
     user-select:none; -webkit-user-select:none;
   }
 
-  /* ===== 상단 정보 ===== */
+  /* ===== 상단 ===== */
   #top{
     width:100%; max-width:440px;
-    padding:10px 14px 6px;
+    padding:10px 14px 4px;
     display:flex; align-items:flex-end; justify-content:space-between; gap:8px;
   }
-  #title{font-size:22px; line-height:1; letter-spacing:-.5px;}
-  #title small{display:block; font-size:11px; color:var(--ink-soft); margin-top:3px; letter-spacing:0;}
+  #title{font-size:21px; line-height:1; letter-spacing:-.5px;}
+  #title small{display:block; font-size:11px; color:var(--ink-soft); margin-top:3px;}
   .stat{text-align:right;}
   .stat .label{font-size:11px; color:var(--ink-soft);}
   .stat .value{font-size:22px; line-height:1.05;}
   #best .value{font-size:15px; color:var(--ink-soft);}
+  #sndBtn{
+    font-family:inherit; font-size:16px; border:1.5px solid var(--grid-line);
+    background:#fff; border-radius:10px; width:36px; height:36px; cursor:pointer;
+  }
 
-  /* ===== 타이머 바 ===== */
-  #timerWrap{
-    width:100%; max-width:440px; padding:4px 14px 8px;
+  /* 콤보 칩 */
+  #comboChip{
+    position:fixed; z-index:15; left:50%; top:110px; transform:translateX(-50%) scale(0);
+    background:#FF8A3D; color:#fff; font-size:20px;
+    padding:6px 18px; border-radius:99px;
+    box-shadow:0 3px 10px rgba(255,138,61,.4);
+    transition:transform .18s cubic-bezier(.34,1.56,.64,1);
+    pointer-events:none;
   }
-  #timerTrack{
-    height:10px; background:#E8EFF4; border-radius:99px; overflow:hidden;
-    border:1px solid var(--grid-line);
-  }
-  #timerFill{
-    height:100%; width:100%;
+  #comboChip.show{transform:translateX(-50%) scale(1);}
+
+  /* ===== 타이머 ===== */
+  #timerWrap{ width:100%; max-width:440px; padding:4px 14px 8px; display:flex; align-items:center; gap:8px;}
+  #timerTrack{ flex:1; height:12px; background:#E8EFF4; border-radius:99px; overflow:hidden; border:1px solid var(--grid-line);}
+  #timerFill{ height:100%; width:100%;
     background:linear-gradient(90deg,#8FC7A9,#F2C94C 70%,#E07A5F);
-    border-radius:99px;
-    transition:none;
-  }
+    border-radius:99px;}
+  #timeNum{font-size:16px; min-width:44px; text-align:right; color:var(--ink);}
+  #timeNum.low{color:var(--stamp); animation:blink .6s infinite;}
+  @keyframes blink{50%{opacity:.35;}}
 
   /* ===== 게임판 ===== */
   #boardWrap{
-    position:relative;
-    flex:1; width:100%; max-width:440px;
+    position:relative; flex:1; width:100%; max-width:440px;
     display:flex; align-items:flex-start; justify-content:center;
-    padding:0 10px;
-    min-height:0;
+    padding:0 10px; min-height:0;
   }
   #board{
     position:relative;
     background:var(--card);
     border:1.5px solid var(--grid-line);
-    border-radius:var(--radius);
+    border-radius:14px;
     box-shadow:var(--shadow);
     touch-action:none;
     display:grid;
+    overflow:hidden;
   }
   .cell{
     display:flex; align-items:center; justify-content:center;
-    font-size:20px; color:var(--ink);
-    border-radius:6px;
-    position:relative;
-    transition:background .08s;
+    border-radius:8px; position:relative;
+    margin:2px;
+    transition:transform .12s, box-shadow .12s, filter .12s;
+    will-change:transform;
   }
-  .cell.sel{background:var(--marker);}
-  .cell.sel.ok{background:var(--marker-ok);}
-  .cell.empty{color:transparent;}
-  .cell.empty::after{
-    content:''; position:absolute; inset:38%;
-    border-radius:50%; background:var(--grid-line); opacity:.5;
+  /* 짝 색상: 합 10 짝끼리 같은 계열 (1·9 빨강 / 2·8 주황 / 3·7 초록 / 4·6 파랑 / 5 보라) */
+  .v1{background:#FFE3E0; color:#C93B30;}
+  .v9{background:#F8B6B0; color:#8E241C;}
+  .v2{background:#FFEAD1; color:#C4761B;}
+  .v8{background:#F8CD96; color:#8A5210;}
+  .v3{background:#DFF3D8; color:#3E8A3C;}
+  .v7{background:#B7E2AC; color:#2A6428;}
+  .v4{background:#DCEBFB; color:#2E6DB4;}
+  .v6{background:#AFD2F2; color:#1F4E86;}
+  .v5{background:#EBE0F7; color:#7449A8;}
+  .cell.empty{background:transparent !important; box-shadow:none !important;}
+
+  .cell.sel{
+    transform:scale(.9);
+    box-shadow:inset 0 0 0 3px rgba(59,70,82,.45);
+    filter:saturate(1.3);
+  }
+  .cell.sel.ok{
+    box-shadow:inset 0 0 0 3px #2E9E5B, 0 0 10px rgba(46,158,91,.5);
+  }
+  /* 시간 아이템 숫자 */
+  .cell.bonus{ box-shadow:0 0 0 2.5px #F2B01E, 0 0 10px rgba(242,176,30,.55); }
+  .cell.bonus::after{
+    content:'⏱'; position:absolute; top:-3px; right:-1px;
+    font-size:11px; line-height:1;
+  }
+  .cell.bonus.sel{ box-shadow:0 0 0 2.5px #F2B01E, inset 0 0 0 3px rgba(59,70,82,.45); }
+  .cell.bonus.sel.ok{ box-shadow:0 0 0 2.5px #F2B01E, inset 0 0 0 3px #2E9E5B; }
+
+  /* 특수 블록 */
+  .wild{
+    background:linear-gradient(135deg,#FFD86B,#FF9A5A 55%,#C88BF0);
+    color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.3);
+  }
+  .stone{
+    background:linear-gradient(180deg,#C3C9D0,#A9B0B8);
+    color:#6E747B;
+    box-shadow:inset 0 -3px 0 rgba(0,0,0,.15);
+  }
+  .bombcell{ box-shadow:0 0 0 2.5px #E2574C, 0 0 10px rgba(226,87,76,.5); }
+  .bombcell::after{
+    content:'💣'; position:absolute; top:-4px; right:-2px;
+    font-size:12px; line-height:1;
+  }
+  .bombcell.sel{ box-shadow:0 0 0 2.5px #E2574C, inset 0 0 0 3px rgba(59,70,82,.45); }
+  .bombcell.sel.ok{ box-shadow:0 0 0 2.5px #E2574C, inset 0 0 0 3px #2E9E5B; }
+
+  /* 🔟 TEN 블록 */
+  .tenblock{
+    background:linear-gradient(180deg,#3D74C8,#2A5497);
+    color:#fff; letter-spacing:-1px;
+    box-shadow:inset 0 -3px 0 rgba(0,0,0,.25), 0 0 8px rgba(61,116,200,.5);
+    text-shadow:0 1px 2px rgba(0,0,0,.3);
   }
 
-  /* 선택 사각형 */
-  #selRect{
-    position:absolute; pointer-events:none;
-    border:2px dashed rgba(217,72,59,.55);
-    border-radius:8px; display:none;
+  /* 🔟 기폭 연출 */
+  .cell.tsel{
+    transform:scale(1.08);
+    box-shadow:0 0 0 3px #F2994A, 0 0 14px rgba(242,153,74,.8),
+               inset 0 -3px 0 rgba(0,0,0,.25);
+    animation:tCharge .45s infinite alternate;
+    z-index:3;
   }
+  @keyframes tCharge{
+    from{ filter:brightness(1); }
+    to  { filter:brightness(1.35); box-shadow:0 0 0 4px #E2574C, 0 0 20px rgba(226,87,76,.9); }
+  }
+  .cell.boomcharge{ animation:fuseA .24s linear; z-index:3; }
+  @keyframes fuseA{
+    0%{ transform:scale(1.08) translate(0,0); filter:brightness(1.2); }
+    25%{ transform:scale(1.12) translate(-2px,1px); filter:brightness(1.9); }
+    50%{ transform:scale(1.14) translate(2px,-1px); }
+    75%{ transform:scale(1.18) translate(-2px,-1px); filter:brightness(2.4); }
+    100%{ transform:scale(1.22) translate(0,0); filter:brightness(3); }
+  }
+  .cell.wobble{ animation:wobA .32s; }
+  @keyframes wobA{
+    0%,100%{ transform:rotate(0); }
+    25%{ transform:rotate(-7deg); } 75%{ transform:rotate(7deg); }
+  }
+  .plusFx.info{ color:#7C8894; font-size:15px; }
+
+  /* 피버 모드 */
+  #feverChip{
+    position:fixed; top:60px; left:50%; z-index:16; display:none;
+    transform:translateX(-50%);
+    background:linear-gradient(90deg,#FF7A3D,#FFB13D);
+    color:#fff; padding:5px 18px; border-radius:99px; font-size:16px;
+    box-shadow:0 3px 12px rgba(255,122,61,.55);
+    animation:feverPulse .45s infinite alternate;
+    pointer-events:none;
+  }
+  @keyframes feverPulse{ from{transform:translateX(-50%) scale(1);} to{transform:translateX(-50%) scale(1.09);} }
+  body.fever #feverChip{display:block;}
+  body.fever #board{ box-shadow:0 0 26px rgba(255,120,40,.55), var(--shadow); }
+
+  /* 외침(연출 텍스트) */
+  #shout{
+    position:fixed; left:50%; top:36%; z-index:19; pointer-events:none;
+    transform:translate(-50%,-50%) scale(.5); opacity:0;
+    font-size:32px; color:#fff; white-space:nowrap;
+    background:rgba(59,70,82,.92); padding:10px 28px; border-radius:16px;
+    box-shadow:0 8px 24px rgba(0,0,0,.3);
+    transition:transform .18s cubic-bezier(.34,1.56,.64,1), opacity .18s;
+  }
+  #shout.show{ transform:translate(-50%,-50%) scale(1); opacity:1; }
+  #shout.mega{ background:linear-gradient(90deg,#E2574C,#F2994A); font-size:38px; }
+
+  /* 화면 흔들림 */
+  @keyframes shakeA{
+    0%,100%{transform:translate(0,0);}
+    20%{transform:translate(-5px,2px);} 40%{transform:translate(5px,-2px);}
+    60%{transform:translate(-4px,-2px);} 80%{transform:translate(4px,2px);}
+  }
+  #board.shake{ animation:shakeA .35s; }
+
+  /* MEGA 게이지 */
+  #megaWrap{
+    width:100%; max-width:440px; padding:0 14px 4px;
+    display:flex; align-items:center; gap:6px;
+    font-size:12px; color:var(--ink-soft);
+  }
+  .mdot{
+    width:11px; height:11px; border-radius:50%;
+    background:#E4EAEF; border:1.5px solid var(--grid-line);
+  }
+  .mdot.on{ background:#F2994A; border-color:#E2574C; }
+  #megaWrap.ready .mdot{ background:#F2994A; border-color:#E2574C; animation:blink .5s infinite; }
+  #megaWrap.ready #megaLbl{ color:#E2574C; font-weight:bold; }
+
+  /* 목표 임박 / 신기록 */
+  #tenProg.hot{ color:#D9910B; animation:blink .6s infinite; }
+  #scoreVal.gold{ color:#D9910B; }
+  #bestGap{
+    position:fixed; top:56px; right:12px; z-index:14;
+    background:#fff; border:1.5px solid var(--grid-line); border-radius:99px;
+    font-size:12px; color:var(--ink); padding:3px 10px; display:none;
+    box-shadow:var(--shadow);
+  }
+
+  /* 시간 위기/보상 */
+  #timeNum.crit{ font-size:22px; color:var(--stamp); animation:blink .4s infinite; }
+  #timerFill.gain{ background:#2E9E5B !important; transition:background .1s; }
+
+  /* ✨ 반짝이는 돌 */
+  .sparkle::before{
+    content:'✨'; position:absolute; top:-5px; left:-3px;
+    font-size:12px; line-height:1; animation:blink 1s infinite;
+  }
+
+  /* 힌트 깜빡임 */
+  .cell.hint{ animation:hintPulse .8s infinite; }
+  @keyframes hintPulse{
+    0%,100%{ box-shadow:0 0 0 3px rgba(242,176,30,.95); }
+    50%    { box-shadow:0 0 0 7px rgba(242,176,30,.2); }
+  }
+
+  /* 낙하 애니메이션 */
+  .cell.fall{ transition:transform .28s cubic-bezier(.3,.9,.4,1.15); }
+
+  /* 터지는 효과 */
+  .pop{
+    position:absolute; pointer-events:none; z-index:6;
+    border-radius:8px;
+    animation:popOut .3s ease-out forwards;
+    display:flex; align-items:center; justify-content:center;
+  }
+  @keyframes popOut{
+    0%{transform:scale(1); opacity:1;}
+    100%{transform:scale(1.7); opacity:0;}
+  }
+  .particle{
+    position:absolute; pointer-events:none; z-index:7;
+    width:7px; height:7px; border-radius:50%;
+    animation:fly .5s ease-out forwards;
+  }
+  @keyframes fly{
+    0%{transform:translate(0,0) scale(1); opacity:1;}
+    100%{transform:translate(var(--dx),var(--dy)) scale(.3); opacity:0;}
+  }
+  .plusFx{
+    position:absolute; pointer-events:none; z-index:8;
+    color:#2E9E5B; font-size:22px; white-space:nowrap;
+    transform:translate(-50%,-50%);
+    text-shadow:0 1px 0 #fff;
+    animation:floatUp .9s ease-out forwards;
+  }
+  .plusFx.time{color:#D9910B;}
+  @keyframes floatUp{
+    0%{opacity:0; transform:translate(-50%,-30%);}
+    25%{opacity:1;}
+    100%{opacity:0; transform:translate(-50%,-170%);}
+  }
+
   /* 합계 배지 */
   #sumBadge{
     position:absolute; pointer-events:none; display:none;
     background:var(--ink); color:#fff;
-    font-size:14px; padding:3px 10px; border-radius:99px;
-    transform:translate(-50%,-140%);
-    z-index:5; white-space:nowrap;
+    font-size:20px; padding:6px 16px; border-radius:99px;
+    transform:translate(-50%,-150%);
+    z-index:9; white-space:nowrap;
+    box-shadow:0 3px 8px rgba(0,0,0,.25);
   }
-  #sumBadge.ok{background:#2E9E5B;}
+  #sumBadge.ok{background:#2E9E5B; font-size:22px;}
+  #levelChip{
+    position:fixed; z-index:18; left:50%; top:42%;
+    transform:translate(-50%,-50%) scale(0);
+    background:var(--ink); color:#fff; text-align:center;
+    padding:18px 34px; border-radius:18px;
+    box-shadow:0 8px 24px rgba(0,0,0,.3);
+    transition:transform .25s cubic-bezier(.34,1.56,.64,1);
+    pointer-events:none;
+  }
+  #levelChip.show{transform:translate(-50%,-50%) scale(1);}
+  #lvBig{font-size:30px; letter-spacing:1px;}
+  #lvSub{font-size:15px; color:#F2C94C; margin-top:4px;}
+  .cell.sel{ z-index:2; }
 
-  /* 十 도장 효과 */
-  .stampFx{
-    position:absolute; pointer-events:none; z-index:6;
-    color:var(--stamp); font-size:44px;
-    border:3px solid var(--stamp); border-radius:10px;
-    width:58px; height:58px;
-    display:flex; align-items:center; justify-content:center;
-    transform:translate(-50%,-50%) rotate(-8deg) scale(1.6);
-    opacity:0;
-    animation:stampIn .55s ease-out forwards;
+  /* 튜토리얼 손가락 */
+  #tutHand{
+    position:absolute; z-index:12; pointer-events:none; display:none;
+    font-size:34px; filter:drop-shadow(0 2px 3px rgba(0,0,0,.3));
+    transition:left 1.1s ease-in-out, top 1.1s ease-in-out;
   }
-  @keyframes stampIn{
-    0%{opacity:0; transform:translate(-50%,-50%) rotate(-8deg) scale(1.8);}
-    35%{opacity:.95; transform:translate(-50%,-50%) rotate(-8deg) scale(1);}
-    75%{opacity:.9;}
-    100%{opacity:0; transform:translate(-50%,-50%) rotate(-8deg) scale(.96);}
-  }
-  .plusFx{
-    position:absolute; pointer-events:none; z-index:7;
-    color:#2E9E5B; font-size:20px;
-    transform:translate(-50%,-50%);
-    animation:floatUp .8s ease-out forwards;
-  }
-  @keyframes floatUp{
-    0%{opacity:0; transform:translate(-50%,-30%);}
-    25%{opacity:1;}
-    100%{opacity:0; transform:translate(-50%,-160%);}
+  #tutMsg{
+    position:absolute; z-index:12; pointer-events:none; display:none;
+    left:50%; transform:translateX(-50%);
+    background:var(--ink); color:#fff; font-size:14px;
+    padding:8px 16px; border-radius:99px; white-space:nowrap;
+    box-shadow:0 3px 8px rgba(0,0,0,.25);
   }
 
-  /* ===== 오버레이(시작/종료) ===== */
+  /* ===== 오버레이 ===== */
   .overlay{
     position:fixed; inset:0; z-index:20;
     background:rgba(250,248,241,.92);
@@ -156,58 +340,46 @@
     border:1.5px solid var(--grid-line);
     border-radius:18px;
     box-shadow:var(--shadow);
-    padding:26px 22px 22px;
+    padding:24px 22px 20px;
     text-align:center;
-    max-height:86vh; overflow-y:auto;
+    max-height:88vh; overflow-y:auto;
   }
   .panel h1{font-size:30px; letter-spacing:-1px;}
   .panel h1 .ten{color:var(--stamp);}
-  .panel .rule{
-    font-size:14px; color:var(--ink-soft); line-height:1.7;
-    margin:14px 0 18px;
-  }
+  .panel .rule{font-size:14px; color:var(--ink-soft); line-height:1.7; margin:12px 0 14px;}
   .panel .rule b{color:var(--ink);}
-  .demoRow{
-    display:flex; gap:6px; justify-content:center; margin:10px 0 4px;
-  }
+  .demoRow{display:flex; gap:6px; justify-content:center; margin:8px 0 2px; align-items:center;}
   .demoRow span{
-    width:34px; height:34px; display:flex; align-items:center; justify-content:center;
-    background:var(--marker); border-radius:8px; font-size:17px;
+    width:36px; height:36px; display:flex; align-items:center; justify-content:center;
+    border-radius:9px; font-size:18px;
   }
-  .demoRow .eq{background:none; font-size:17px; width:auto;}
-  .demoRow .res{background:var(--marker-ok);}
+  .demoRow .eq{background:none; font-size:17px; width:auto; color:var(--ink-soft);}
+  .legend{display:flex; gap:5px; justify-content:center; margin:8px 0 2px; flex-wrap:wrap;}
+  .legend span{
+    width:30px; height:30px; display:flex; align-items:center; justify-content:center;
+    border-radius:7px; font-size:15px;
+  }
+  .legendNote{font-size:12px; color:var(--ink-soft); margin-top:4px;}
 
   .btn{
-    font-family:inherit; font-size:18px;
-    border:none; cursor:pointer;
+    font-family:inherit; font-size:18px; border:none; cursor:pointer;
     background:var(--stamp); color:#fff;
-    padding:13px 0; width:100%;
-    border-radius:12px;
-    box-shadow:0 3px 0 #B03528;
-    margin-top:10px;
+    padding:13px 0; width:100%; border-radius:12px;
+    box-shadow:0 3px 0 #B03528; margin-top:12px;
   }
   .btn:active{transform:translateY(2px); box-shadow:0 1px 0 #B03528;}
-  .btn.sub{
-    background:#fff; color:var(--ink);
-    border:1.5px solid var(--grid-line);
-    box-shadow:0 3px 0 var(--grid-line);
-    font-size:15px;
-  }
 
-  #finalScore{font-size:52px; color:var(--stamp); line-height:1.1; margin:6px 0 2px;}
+  #finalScore{font-size:52px; color:var(--stamp); line-height:1.1; margin:4px 0 0;}
+  #maxComboLine{font-size:14px; color:#FF8A3D; height:20px;}
   #newBest{font-size:13px; color:#2E9E5B; height:18px;}
-
-  #nameRow{display:flex; gap:8px; margin:12px 0 4px;}
+  #nameRow{display:flex; gap:8px; margin:10px 0 4px;}
   #nameInput{
     flex:1; font-family:inherit; font-size:15px;
     border:1.5px solid var(--grid-line); border-radius:10px;
-    padding:10px 12px; color:var(--ink); background:var(--paper);
-    text-align:center;
+    padding:10px 12px; color:var(--ink); background:var(--paper); text-align:center;
   }
-  #nameInput:focus{outline:2px solid var(--marker);}
-
-  /* 랭킹 */
-  .tabs{display:flex; gap:6px; margin:14px 0 8px;}
+  #nameInput:focus{outline:2px solid #F2C94C;}
+  .tabs{display:flex; gap:6px; margin:12px 0 8px;}
   .tab{
     flex:1; font-family:inherit; font-size:13px; cursor:pointer;
     padding:8px 0; border-radius:9px;
@@ -217,29 +389,22 @@
   #rankList{
     text-align:left; font-size:14px;
     border:1.5px solid var(--grid-line); border-radius:12px;
-    max-height:180px; overflow-y:auto;
-    background:var(--paper);
+    max-height:170px; overflow-y:auto; background:var(--paper);
   }
-  .rankRow{
-    display:flex; align-items:center; gap:10px;
-    padding:7px 12px;
-    border-bottom:1px dashed var(--grid-line);
-  }
+  .rankRow{display:flex; align-items:center; gap:10px; padding:7px 12px; border-bottom:1px dashed var(--grid-line);}
   .rankRow:last-child{border-bottom:none;}
   .rankRow .no{width:26px; color:var(--ink-soft); font-size:12px;}
   .rankRow .nm{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .rankRow .sc{color:var(--stamp);}
-  .rankRow.me{background:var(--marker);}
+  .rankRow.me{background:#FFE590;}
   .rankNote{font-size:12px; color:var(--ink-soft); padding:14px 10px; text-align:center; line-height:1.6;}
 
   /* ===== 광고 자리 ===== */
   #adSlot{
-    width:100%; max-width:440px;
-    height:62px; flex-shrink:0;
+    width:100%; max-width:440px; height:62px; flex-shrink:0;
     margin:6px auto 8px;
     display:flex; align-items:center; justify-content:center;
-    border:2px dashed var(--grid-line);
-    border-radius:10px;
+    border:2px dashed var(--grid-line); border-radius:10px;
     color:var(--ink-soft); font-size:12px;
     background:rgba(255,255,255,.6);
   }
@@ -248,19 +413,35 @@
 <body>
 
   <div id="top">
-    <div id="title">모아텐<small>드래그해서 합 10 만들기</small></div>
+    <div id="title">모아텐<small>Lv.<span id="lvNum">1</span> · <span id="tenProg">🔟 0/4</span></small></div>
+    <button id="sndBtn" title="소리 켜기/끄기">🔊</button>
     <div class="stat" id="best"><div class="label">최고</div><div class="value" id="bestVal">0</div></div>
     <div class="stat"><div class="label">점수</div><div class="value" id="scoreVal">0</div></div>
   </div>
 
-  <div id="timerWrap"><div id="timerTrack"><div id="timerFill"></div></div></div>
+  <div id="timerWrap">
+    <div id="timerTrack"><div id="timerFill"></div></div>
+    <div id="timeNum">120초</div>
+  </div>
+
+  <div id="megaWrap">
+    <span class="mdot"></span><span class="mdot"></span><span class="mdot"></span><span class="mdot"></span><span class="mdot"></span>
+    <span id="megaLbl">MEGA</span>
+  </div>
 
   <div id="boardWrap">
     <div id="board">
-      <div id="selRect"></div>
       <div id="sumBadge">0</div>
+      <div id="tutHand">👆</div>
+      <div id="tutMsg">이웃한 숫자를 이어 그어 보세요!</div>
     </div>
   </div>
+
+  <div id="comboChip">x2 콤보!</div>
+  <div id="levelChip"><div id="lvBig">LEVEL 2</div><div id="lvSub">+5초</div></div>
+  <div id="feverChip">🔥 FEVER ×2</div>
+  <div id="shout"></div>
+  <div id="bestGap"></div>
 
   <!-- ▼▼▼ 광고 자리: 나중에 AdMob/애드센스 코드를 이 div 안에 넣으면 됩니다 ▼▼▼ -->
   <div id="adSlot">광고 영역 (배너 320×50) — 준비 중</div>
@@ -271,14 +452,28 @@
     <div class="panel">
       <h1>모아<span class="ten">텐</span></h1>
       <div class="demoRow">
-        <span>3</span><span>7</span><span class="eq">=</span><span class="res">10!</span>
+        <span class="v3" style="background:#DFF3D8;color:#3E8A3C;">3</span>
+        <span class="v7" style="background:#B7E2AC;color:#2A6428;">7</span>
+        <span class="eq">=</span>
+        <span style="background:#2E9E5B;color:#fff;">10</span>
       </div>
       <p class="rule">
-        손가락(마우스)으로 <b>네모를 그려</b> 숫자를 묶으세요.<br>
-        묶은 숫자의 합이 <b>정확히 10</b>이면 사라집니다.<br>
-        <b>제한시간 2분</b> 동안 최대한 많이 지우세요!<br>
-        한 번에 많이 지울수록 보너스 점수 🎁
+        숫자를 이어 그어 <b>합 10</b>을 만드세요.<br>
+        완성한 자리엔 🔟 <b>TEN 블록</b>이 남습니다.<br>
+        모은 TEN을 <b>이어 그어 💥 기폭!</b> 많이 이을수록 초강력
       </p>
+      <div class="legend">
+        <span style="background:#FFE3E0;color:#C93B30;">1</span>
+        <span style="background:#F8B6B0;color:#8E241C;">9</span>
+        <span style="background:#FFEAD1;color:#C4761B;">2</span>
+        <span style="background:#F8CD96;color:#8A5210;">8</span>
+        <span style="background:#DFF3D8;color:#3E8A3C;">3</span>
+        <span style="background:#B7E2AC;color:#2A6428;">7</span>
+        <span style="background:#DCEBFB;color:#2E6DB4;">4</span>
+        <span style="background:#AFD2F2;color:#1F4E86;">6</span>
+        <span style="background:#EBE0F7;color:#7449A8;">5</span>
+      </div>
+      <div class="legendNote">같은 색끼리 = 10 짝! · 🪨 돌은 바로 옆에 TEN을 만들어야 깨짐</div>
       <button class="btn" id="startBtn">게임 시작</button>
     </div>
   </div>
@@ -286,230 +481,1000 @@
   <!-- 종료 화면 -->
   <div class="overlay" id="endOverlay" style="display:none;">
     <div class="panel">
-      <div style="font-size:15px;color:var(--ink-soft);">이번 판 점수</div>
+      <div id="endReason" style="font-size:14px;color:var(--ink);margin-bottom:2px;">게임 종료</div>
+      <div style="font-size:13px;color:var(--ink-soft);">최종 점수</div>
       <div id="finalScore">0</div>
+      <div id="maxComboLine"></div>
+      <div id="chainLine" style="font-size:14px;color:#2E6DB4;height:20px;"></div>
       <div id="newBest"></div>
-
       <div id="nameRow">
         <input id="nameInput" maxlength="10" placeholder="닉네임 (랭킹 등록용)">
       </div>
-
       <div class="tabs">
         <button class="tab on" id="tabLocal">내 기록</button>
         <button class="tab" id="tabOnline">온라인 랭킹</button>
       </div>
       <div id="rankList"></div>
-
       <button class="btn" id="retryBtn">다시 하기</button>
     </div>
   </div>
 
 <script>
 /* ============================================================
-   [설정] 온라인 랭킹 서버 주소
-   - 아래 따옴표 안이 비어 있으면: 내 기록(이 기기)만 저장됩니다.
-   - Firebase 무료 데이터베이스 주소를 붙여넣으면
-     전 세계 온라인 랭킹이 자동으로 켜집니다. (가이드 문서 참고)
-   - 예시: const FIREBASE_URL = "https://moaten-abc123-default-rtdb.firebaseio.com";
+   [설정] 온라인 랭킹 서버 주소 (Firebase)
+   비어 있으면 내 기록만 저장. 가이드 문서 참고해 주소를 붙여넣으면
+   온라인 랭킹이 자동으로 켜집니다.
    ============================================================ */
 const FIREBASE_URL = "";
 
-/* ===== 기본 설정 ===== */
-const COLS = 9, ROWS = 13;      // 판 크기
-const GAME_TIME = 120;          // 제한시간(초)
+let COLS = 5, ROWS = 8;          // 레벨에 따라 변함
+/* 레벨별 판 크기: 작을수록 칸이 큼. 3레벨부터는 풀사이즈 유지 */
+function gridForLevel(lv){
+  if(lv<=1) return [5, 8];
+  if(lv===2) return [7, 10];
+  return [9, 13];
+}
+const WILD = 10, STONE = 11, TENB = 12;  // ★만능, 🪨돌, 🔟TEN블록
+const FEVER_MS = 6000;          // 피버 지속시간
+const HINT_MS = 8000;           // 이 시간 동안 못 지우면 힌트 표시
+const GAME_TIME = 60;           // 시작 제한시간(초) — 지우면서 시간을 벌어야 함
+const COMBO_WINDOW = 3000;      // 콤보 유지 시간(ms)
 
-/* ===== 저장소(오류 나도 게임은 계속되게) ===== */
 const store = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v===null ? d : JSON.parse(v); }catch(e){ return d; } },
   set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
 };
 
-/* ===== 상태 ===== */
-let grid = [];            // 숫자 배열(0 = 빈칸)
-let cells = [];           // 셀 DOM
-let score = 0;
-let best = store.get('moaten_best', 0);
+let grid = [];        // 값 1~9, 0=빈칸
+let cells = [];
+let score = 0, best = store.get('moaten_best', 0);
 let playing = false;
-let timeLeft = GAME_TIME;
-let timerId = null;
+let deadline = 0, timerId = null;
 let dragging = false;
-let dragStart = null;     // {x,y} 보드 기준 픽셀
-let selSet = new Set();   // 선택된 셀 인덱스
+let path = [];              // 선택 경로 (셀 인덱스 순서)
+let level = 1;
+let transiting = false;     // 레벨 전환 연출 중 입력 잠금
+let bombSet = new Set();    // 💣 폭탄이 붙은 칸
+let feverUntil = 0;         // 피버 종료 시각
+let lastAction = 0;         // 마지막으로 지운 시각 (힌트용)
+let hintCells = [];         // 힌트로 표시 중인 칸
+let tenMade = 0;            // 이번 레벨에서 만든 TEN 수
+let tenGoal = 4;            // 레벨 클리어 목표
+let pendingSpawn = 0;       // 다음 보충 때 투입할 새 숫자 수
+let megaCount = 0;          // MEGA 게이지 (TEN 5개마다 초대형 폭발)
+const MEGA_NEED = 5;
+let maxChain = 0;           // 이번 판 최장 연결
+let newBestHit = false;     // 최고기록 돌파 연출 1회용
+let sparkleSet = new Set(); // ✨ 반짝이는 돌
+let lastCeil = 999;         // 카운트다운용
+let clearReady = false;     // 목표 달성 후 '마지막 기폭' 대기 상태
+let tenTut = store.get('moaten_tut2', false);  // TEN 기폭 첫 안내 1회
 let cellSize = 40;
+let combo = 0, lastClear = 0, maxCombo = 0;
+let tutDone = store.get('moaten_tut', false);
+let tutTimer = null;
 
 const $ = id => document.getElementById(id);
-const board = $('board'), selRect = $('selRect'), sumBadge = $('sumBadge');
-
+const board = $('board'), sumBadge = $('sumBadge');
 $('bestVal').textContent = best;
 
-/* ===== 보드 크기 계산(모바일 대응) ===== */
+/* ===== 사운드 (파일 없이 WebAudio 합성) ===== */
+let audioCtx = null;
+let soundOn = store.get('moaten_snd', true);
+$('sndBtn').textContent = soundOn ? '🔊' : '🔇';
+function ensureAudio(){
+  if(!audioCtx){
+    try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){}
+  }
+  if(audioCtx && audioCtx.state==='suspended') audioCtx.resume();
+}
+function tone(freq, dur, type='triangle', vol=0.15, when=0){
+  if(!soundOn || !audioCtx) return;
+  const t = audioCtx.currentTime + when;
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.type = type; o.frequency.value = freq;
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t+dur);
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start(t); o.stop(t+dur);
+}
+function sndPop(comboN){ tone(420 + comboN*70, .12, 'triangle', .18); tone(640 + comboN*70, .10, 'sine', .10, .03); }
+function sndTime(){ tone(880,.09,'sine',.15); tone(1180,.14,'sine',.15,.09); }
+function sndFail(){ tone(180,.08,'square',.05); }
+function sndFever(){ tone(660,.1,'square',.10); tone(880,.1,'square',.10,.08); tone(1100,.18,'square',.12,.16); }
+function sndEnd(){ tone(520,.15,'triangle',.15); tone(390,.15,'triangle',.15,.15); tone(260,.3,'triangle',.15,.3); }
+$('sndBtn').onclick = ()=>{
+  soundOn = !soundOn; store.set('moaten_snd', soundOn);
+  $('sndBtn').textContent = soundOn ? '🔊' : '🔇';
+  ensureAudio(); if(soundOn) tone(600,.08);
+};
+
+/* ===== 레이아웃 ===== */
 function layoutBoard(){
   const wrap = $('boardWrap');
-  const availW = wrap.clientWidth - 8;
-  const availH = wrap.clientHeight - 8;
+  // 가로: 컨테이너 좌우 여백(20) + 판 안쪽 여백(12) + 테두리(3) + 여유(3) = 38
+  // 세로: 판 안쪽 여백(12) + 테두리(3) + 여유(3) = 18
+  const availW = wrap.clientWidth - 38;
+  const availH = wrap.clientHeight - 18;
   cellSize = Math.floor(Math.min(availW / COLS, availH / ROWS));
-  cellSize = Math.max(24, Math.min(cellSize, 46));
+  cellSize = Math.max(22, Math.min(cellSize, 66));
   board.style.gridTemplateColumns = `repeat(${COLS}, ${cellSize}px)`;
   board.style.gridTemplateRows = `repeat(${ROWS}, ${cellSize}px)`;
   board.style.padding = '6px';
-  cells.forEach(c => c.style.fontSize = Math.round(cellSize*0.5)+'px');
+  cells.forEach(c => c.style.fontSize = Math.round(cellSize*0.52)+'px');
 }
 window.addEventListener('resize', layoutBoard);
 
-/* ===== 새 판 만들기 ===== */
-function newGame(){
+/* ===== 셀 표시 갱신 ===== */
+function paintCell(i){
+  const el = cells[i], v = grid[i];
+  let cls = 'cell';
+  if(v===0) cls += ' empty';
+  else if(v===WILD) cls += ' wild';
+  else if(v===STONE) cls += ' stone';
+  else if(v===TENB) cls += ' tenblock';
+  else cls += ' v'+v;
+  if(bombSet.has(i) && v>=1 && v<=9) cls += ' bombcell';
+  if(v===STONE && sparkleSet.has(i)) cls += ' sparkle';
+  el.className = cls;
+  el.textContent = v===0 ? '' : (v===WILD ? '★' : (v===STONE ? '🪨' : (v===TENB ? '10' : v)));
+}
+function randVal(){ return 1 + Math.floor(Math.random()*9); }
+
+/* ===== 보드 채우기 / 새 판 ===== */
+function fillBoard(){
+  [COLS, ROWS] = gridForLevel(level);
   grid = [];
   board.querySelectorAll('.cell').forEach(c => c.remove());
   cells = [];
   for(let i=0;i<COLS*ROWS;i++){
-    const v = 1 + Math.floor(Math.random()*9);
-    grid.push(v);
+    grid.push(randVal());
     const d = document.createElement('div');
-    d.className = 'cell';
-    d.textContent = v;
+    d.className='cell';
     board.appendChild(d);
     cells.push(d);
   }
+  placeSpecials();
+  grid.forEach((_,i)=>paintCell(i));
   layoutBoard();
-  score = 0; updateScore(0);
-  timeLeft = GAME_TIME;
-  playing = true;
+}
+/* 레벨에 따라 특수 블록 배치 (★는 처음부터, 💣은 2레벨부터, 🪨은 3레벨부터) */
+function placeSpecials(){
+  bombSet.clear();
+  const idx = [...Array(COLS*ROWS).keys()];
+  for(let i=idx.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [idx[i],idx[j]]=[idx[j],idx[i]];
+  }
+  let p=0;
+  sparkleSet.clear();
+  const stoneN = level>=2 ? Math.min(12, 3*(level-1)) : 0;   // 1레벨 0개, 2레벨 3개, 레벨당 +3, 최대 12
+  const stoneIdx=[];
+  for(let k=0;k<stoneN;k++){ grid[idx[p]] = STONE; stoneIdx.push(idx[p]); p++; }
+  if(stoneIdx.length) sparkleSet.add(stoneIdx[Math.floor(Math.random()*stoneIdx.length)]);  // ✨ 하나만 반짝
+}
+function newGame(){
+  level = 1; $('lvNum').textContent = level;   // 레벨을 먼저 1로 되돌린 뒤 판 생성
+  tenMade = 0; tenGoal = 2*(3 + level); pendingSpawn = 0;
+  megaCount = 0; maxChain = 0; newBestHit = false; lastCeil = 999;
+  clearReady = false;
+  $('scoreVal').classList.remove('gold');
+  $('tenProg').classList.remove('hot');
+  $('bestGap').style.display='none';
+  updateMegaUI();
+  $('tenProg').textContent = '🔟 0/'+tenGoal;
+  fillBoard();
+  score = 0; $('scoreVal').textContent = 0;
+  combo = 0; maxCombo = 0; lastClear = 0;
+  playing = true; transiting = false;
+  lastAction = Date.now(); clearHint();
+  deadline = Date.now() + GAME_TIME*1000;
   clearInterval(timerId);
-  const t0 = Date.now();
-  timerId = setInterval(()=>{
-    timeLeft = GAME_TIME - (Date.now()-t0)/1000;
-    if(timeLeft <= 0){ timeLeft = 0; endGame(); }
-    $('timerFill').style.width = (timeLeft/GAME_TIME*100)+'%';
-  }, 100);
+  timerId = setInterval(tick, 100);
+  tick();
+  if(!tutDone) startTutorial();
+}
+function tick(){
+  let left = (deadline - Date.now())/1000;
+  if(left <= 0){ left = 0; endGame('time'); }
+  $('timerFill').style.width = Math.min(100, left/GAME_TIME*100)+'%';
+  const tn = $('timeNum');
+  const ceilNow = Math.ceil(left);
+  tn.textContent = ceilNow + '초';
+  tn.classList.toggle('low', left <= 15 && left > 5);
+  tn.classList.toggle('crit', left <= 5 && left > 0);
+  if(playing && left <= 5 && left > 0 && ceilNow !== lastCeil){
+    tone(980, .08, 'square', .12);   // 초읽기 틱
+  }
+  lastCeil = ceilNow;
+  document.body.classList.toggle('fever', playing && Date.now() < feverUntil);
+  if(playing && !transiting && hintCells.length===0 && Date.now()-lastAction > HINT_MS){
+    showHint();
+  }
 }
 
-function updateScore(add){
-  score += add;
-  $('scoreVal').textContent = score;
-}
-
-/* ===== 좌표 → 셀 ===== */
+/* ===== 좌표 ===== */
 function boardPos(ev){
   const r = board.getBoundingClientRect();
-  return { x: Math.min(Math.max(ev.clientX - r.left, 0), r.width-1),
-           y: Math.min(Math.max(ev.clientY - r.top , 0), r.height-1) };
+  return { x: Math.min(Math.max(ev.clientX-r.left,0), r.width-1),
+           y: Math.min(Math.max(ev.clientY-r.top ,0), r.height-1) };
 }
-function cellIndexAt(px, py){
-  const pad = 6;
-  const c = Math.min(COLS-1, Math.max(0, Math.floor((px-pad)/cellSize)));
-  const r = Math.min(ROWS-1, Math.max(0, Math.floor((py-pad)/cellSize)));
-  return r*COLS + c;
+function cellRC(px, py){
+  const pad=6;
+  return [ Math.min(ROWS-1, Math.max(0, Math.floor((py-pad)/cellSize))),
+           Math.min(COLS-1, Math.max(0, Math.floor((px-pad)/cellSize))) ];
+}
+function cellCenter(i){
+  const r = Math.floor(i/COLS), c = i%COLS, pad=6;
+  return [ pad + c*cellSize + cellSize/2, pad + r*cellSize + cellSize/2 ];
 }
 
-/* ===== 드래그 선택 ===== */
+/* ===== 경로 잇기 선택: 이웃 칸으로 이어 긋기 (일자·ㄱ·ㄴ 등 자유) ===== */
+let lastP = null;
+let dragKind = 'num';   // 'num' 숫자 잇기 / 'ten' TEN 잇기(기폭)
 board.addEventListener('pointerdown', ev=>{
-  if(!playing) return;
+  ensureAudio();
+  if(!playing || transiting) return;
+  const p0 = boardPos(ev);
+  const [r0,c0] = cellRC(p0.x, p0.y);
+  const i0 = r0*COLS + c0;
   board.setPointerCapture(ev.pointerId);
-  dragging = true;
-  dragStart = boardPos(ev);
-  updateSelection(ev);
+  dragging = true; lastP = p0;
+  if(grid[i0]===TENB){
+    dragKind = 'ten'; path = [i0];
+    paintTenPath(p0);
+  } else {
+    dragKind = 'num'; path = [];
+    tryAddAt(lastP);
+    paintPath(lastP);
+  }
 });
+
+/* TEN 잇기: TEN 칸끼리만, 8방향, 되돌아가면 취소 */
+function tryAddTenAt(p){
+  const [r,c]=cellRC(p.x,p.y);
+  const [ccx,ccy]=cellCenter(r*COLS+c);
+  if(Math.hypot(p.x-ccx,p.y-ccy) > cellSize*0.48) return;
+  const i=r*COLS+c;
+  if(grid[i]!==TENB) return;
+  const last=path[path.length-1];
+  if(i===last) return;
+  if(path.length>=2 && i===path[path.length-2]){ path.pop(); return; }
+  if(!path.includes(i) && isAdj(last,i)) path.push(i);
+}
+function paintTenPath(p){
+  cells.forEach(c=>c.classList.remove('sel','ok','tsel'));
+  path.forEach(i=>cells[i].classList.add('tsel'));
+  const armed = path.length>=2;
+  sumBadge.style.display = 'block';
+  sumBadge.textContent = '💥 '+path.length+'개' + (armed?'!':'');
+  sumBadge.classList.toggle('ok', armed);
+  if(p){
+    sumBadge.style.left = p.x+'px';
+    sumBadge.style.top = Math.max(p.y, 34)+'px';
+  }
+}
+/* 손을 떼면: 2개 이상 → 도화선 연출 후 기폭 / 1개 → 흔들리며 안내 */
+function commitTen(){
+  const arr=[...path];
+  clearSelection();
+  if(arr.length>=2){
+    transiting = true;
+    arr.forEach(i=>cells[i].classList.add('boomcharge'));
+    tone(220,.1,'square',.1); tone(300,.1,'square',.1,.08); tone(420,.1,'square',.12,.16);
+    setTimeout(()=>{
+      arr.forEach(i=>cells[i] && cells[i].classList.remove('boomcharge'));
+      transiting = false;
+      detonateTen(arr);
+    }, 240);
+  } else if(arr.length===1){
+    const el=cells[arr[0]];
+    el.classList.remove('wobble'); void el.offsetWidth; el.classList.add('wobble');
+    const [ccx,ccy]=cellCenter(arr[0]);
+    plusFx(ccx, ccy-14, 'TEN 2개 이상 이어야 💥', 'info');
+    sndFail();
+  }
+}
+
+/* 🔟 수동 기폭: 이어 그은 TEN들이 터짐. 많이 이을수록 반경·점수·시간 급증 */
+function detonateTen(cluster){
+  const g = cluster.length;
+  const radius = 1 + Math.floor(g/3);       // 1~2개:1칸, 3~5개:2칸, 6개+:3칸
+  const removed = new Set(cluster);
+  let extra = 0;
+
+  cluster.forEach(t=>{
+    const tr=Math.floor(t/COLS), tc=t%COLS;
+    for(let dr=-radius;dr<=radius;dr++) for(let dc=-radius;dc<=radius;dc++){
+      const nr=tr+dr, nc=tc+dc;
+      if(nr<0||nr>=ROWS||nc<0||nc>=COLS) continue;
+      const j=nr*COLS+nc;
+      const v=grid[j];
+      if(v>0 && v!==STONE && v!==TENB && !removed.has(j)){ removed.add(j); extra++; }
+    }
+  });
+  // 폭발 범위 안의 💣은 연쇄
+  const bombQ = [...removed].filter(i=>bombSet.has(i));
+  while(bombQ.length){
+    const b = bombQ.pop();
+    const br=Math.floor(b/COLS), bc=b%COLS;
+    for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
+      const nr=br+dr, nc=bc+dc;
+      if(nr<0||nr>=ROWS||nc<0||nc>=COLS) continue;
+      const j=nr*COLS+nc;
+      if(grid[j]>0 && grid[j]!==STONE && grid[j]!==TENB && !removed.has(j)){
+        removed.add(j); extra++;
+        if(bombSet.has(j)) bombQ.push(j);
+      }
+    }
+  }
+
+  const fever = Date.now() < feverUntil;
+  let pts = 20*g*g + extra*2;
+  if(fever) pts *= 2;
+  const timeGain = Math.min(15, g*(g-1));   // 2개:+2초, 3개:+6초, 4개:+12초, 5개+:+15초(상한)
+
+  removed.forEach(i=>{ explode(i); bombSet.delete(i); grid[i]=0; paintCell(i); });
+  score += pts; $('scoreVal').textContent = score;
+  sndPop(6);
+  if(g>=2) shakeBoard();
+  shout(g>=5 ? '🌟 MOA TEN!!' : g===4 ? '🔥 AMAZING!' : g===3 ? '✨ GREAT!' : g===2 ? '💥 NICE!' : '💥 TEN 폭발!');
+
+  const [cx,cy] = cellCenter(cluster[cluster.length-1]);
+  plusFx(cx, cy-8, '+'+pts + (fever?' 🔥':''), false);
+  if(timeGain>0){
+    const wasCrit = (deadline - Date.now())/1000 <= 10;
+    deadline += timeGain*1000;
+    plusFx(cx, cy-40, '⏱ +'+timeGain+'초', true);
+    if(wasCrit) flashTimer();
+    sndTime();
+  }
+  updateBestGap();
+  pendingSpawn += Math.round(extra*0.3);
+  lastAction = Date.now(); clearHint();
+  setTimeout(refill, 140);
+  if(clearReady){
+    clearReady = false;
+    setTimeout(()=>levelUp(true), 700);      // 피날레 기폭 → 레벨 클리어
+  }
+}
 board.addEventListener('pointermove', ev=>{
-  if(dragging) updateSelection(ev);
+  if(!dragging) return;
+  const p = boardPos(ev);
+  const dx=p.x-lastP.x, dy=p.y-lastP.y;
+  const steps = Math.max(1, Math.ceil(Math.hypot(dx,dy)/(cellSize*0.4)));
+  for(let s=1;s<=steps;s++){
+    const sp = {x:lastP.x+dx*s/steps, y:lastP.y+dy*s/steps};
+    if(dragKind==='ten') tryAddTenAt(sp); else tryAddAt(sp);
+  }
+  lastP = p;
+  if(dragKind==='ten') paintTenPath(p); else paintPath(p);
 });
 board.addEventListener('pointerup', ev=>{
   if(!dragging) return;
   dragging = false;
-  commitSelection(ev);
+  if(dragKind==='ten') commitTen(); else commitSelection(ev);
 });
 board.addEventListener('pointercancel', ()=>{ dragging=false; clearSelection(); });
 
-function updateSelection(ev){
-  const p = boardPos(ev);
-  const x1 = Math.min(dragStart.x, p.x), x2 = Math.max(dragStart.x, p.x);
-  const y1 = Math.min(dragStart.y, p.y), y2 = Math.max(dragStart.y, p.y);
-
-  selRect.style.display='block';
-  selRect.style.left = x1+'px'; selRect.style.top = y1+'px';
-  selRect.style.width = (x2-x1)+'px'; selRect.style.height = (y2-y1)+'px';
-
-  const i1 = cellIndexAt(x1,y1), i2 = cellIndexAt(x2,y2);
-  const c1 = i1%COLS, r1 = Math.floor(i1/COLS);
-  const c2 = i2%COLS, r2 = Math.floor(i2/COLS);
-
-  selSet.forEach(i => cells[i].classList.remove('sel','ok'));
-  selSet.clear();
-  let sum = 0;
-  for(let r=r1;r<=r2;r++) for(let c=c1;c<=c2;c++){
-    const i = r*COLS+c;
-    if(grid[i]>0){ selSet.add(i); sum += grid[i]; }
-  }
-  const ok = (sum===10);
-  selSet.forEach(i=>{ cells[i].classList.add('sel'); if(ok) cells[i].classList.add('ok'); });
-
-  sumBadge.style.display = selSet.size ? 'block' : 'none';
-  sumBadge.textContent = '합 '+sum;
-  sumBadge.classList.toggle('ok', ok);
-  sumBadge.style.left = p.x+'px';
-  sumBadge.style.top = Math.max(p.y, 24)+'px';
+function isAdj(a,b){
+  const ra=Math.floor(a/COLS), ca=a%COLS, rb=Math.floor(b/COLS), cb=b%COLS;
+  const dr=Math.abs(ra-rb), dc=Math.abs(ca-cb);
+  return Math.max(dr,dc)===1;   // 상하좌우 + 대각선
 }
-
+function tryAddAt(p){
+  const [r,c]=cellRC(p.x,p.y);
+  // 칸 중심 근처에서만 반응 (대각선 스치기 오작동 방지)
+  const [cx,cy]=cellCenter(r*COLS+c);
+  if(Math.hypot(p.x-cx,p.y-cy) > cellSize*0.48) return;
+  const i=r*COLS+c;
+  if(grid[i]<=0 || grid[i]===STONE || grid[i]===TENB) return;
+  if(path.length===0){ path.push(i); return; }
+  const last=path[path.length-1];
+  if(i===last) return;
+  if(path.length>=2 && i===path[path.length-2]){ path.pop(); return; } // 되돌아가면 취소
+  if(!path.includes(i) && isAdj(last,i)) path.push(i);
+}
+function pathInfo(){
+  let s=0, w=0;
+  for(const i of path){ const v=grid[i]; if(v===WILD) w++; else s+=v; }
+  return {s, w};
+}
+/* ★(만능)는 1~9 아무 수로 취급: 10을 채울 수 있으면 성립 */
+function isTen(s, w){ return w===0 ? s===10 : (10-s>=w && 10-s<=9*w); }
+function paintPath(p){
+  cells.forEach(c=>c.classList.remove('sel','ok'));
+  const {s,w}=pathInfo();
+  const ok = path.length>1 && isTen(s,w);
+  path.forEach(i=>{ cells[i].classList.add('sel'); if(ok) cells[i].classList.add('ok'); });
+  sumBadge.style.display = path.length ? 'block' : 'none';
+  sumBadge.textContent = ok ? '10!' : ('합 '+s+(w>0 ? '+★' : ''));
+  sumBadge.classList.toggle('ok', ok);
+  if(p){
+    sumBadge.style.left = p.x+'px';
+    sumBadge.style.top = Math.max(p.y, 34)+'px';
+  }
+}
 function clearSelection(){
-  selSet.forEach(i => cells[i].classList.remove('sel','ok'));
-  selSet.clear();
-  selRect.style.display='none';
+  cells.forEach(c=>c.classList.remove('sel','ok','tsel'));
+  path = [];
   sumBadge.style.display='none';
 }
 
+/* ===== 지우기 + 효과 + 리필 ===== */
 function commitSelection(ev){
-  let sum = 0;
-  selSet.forEach(i => sum += grid[i]);
-  if(sum===10 && selSet.size>0){
-    const n = selSet.size;
-    let pts = n;
-    if(n>=3) pts += n;              // 3개 이상 한번에: 2배 보너스
-    selSet.forEach(i=>{
-      grid[i]=0;
-      cells[i].classList.add('empty');
-      cells[i].textContent='';
-    });
-    updateScore(pts);
-    if(navigator.vibrate) navigator.vibrate(20);
+  const {s,w} = pathInfo();
+  const targets=[...path];
+  if(targets.length>1 && isTen(s,w)){
+    const now = Date.now();
+    combo = (now - lastClear <= COMBO_WINDOW) ? combo+1 : 1;
+    lastClear = now;
+    maxCombo = Math.max(maxCombo, combo);
+    if(combo>=2) showCombo(combo);
+    if(combo>=5 && now>=feverUntil) sndFever();
+    if(combo>=5) feverUntil = now + FEVER_MS;
+    const fever = now < feverUntil;
 
-    // 十 도장 + 점수 이펙트
+    const n = targets.length;
+    const lastCell = targets[targets.length-1];
+    const removed = new Set(targets);
+    let extra = 0, blastPts = 0;
+
+    // 💣 폭탄 연쇄 (경로에 포함된 폭탄)
+    function chainBombs(seedList){
+      const queue = [...seedList];
+      while(queue.length){
+        const b = queue.pop();
+        const br=Math.floor(b/COLS), bc=b%COLS;
+        for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
+          const nr=br+dr, nc=bc+dc;
+          if(nr<0||nr>=ROWS||nc<0||nc>=COLS) continue;
+          const j=nr*COLS+nc;
+          if(grid[j]>0 && grid[j]!==STONE && grid[j]!==TENB && !removed.has(j)){
+            removed.add(j); extra++;
+            if(bombSet.has(j)) queue.push(j);
+          }
+        }
+      }
+    }
+    chainBombs(targets.filter(i=>bombSet.has(i)));
+
+    // 조합 크기 보상: 4개 이상 → 💣ㅤ획득, 5개 이상 → ★ 획득 (남은 숫자칸에 부여)
+    function grantOn(cond, apply){
+      if(!cond) return;
+      const cand=[];
+      for(let i=0;i<COLS*ROWS;i++){
+        if(grid[i]>=1 && grid[i]<=9 && !removed.has(i) && !bombSet.has(i)) cand.push(i);
+      }
+      if(cand.length) apply(cand[Math.floor(Math.random()*cand.length)]);
+    }
+    grantOn(n>=4, i=>bombSet.add(i));
+    grantOn(n>=5, i=>{ grid[i]=WILD; });
+
+    // 1차 제거
+    removed.forEach(i=>{ explode(i); bombSet.delete(i); grid[i]=0; paintCell(i); });
+
+    // 🔟 TEN 블록 생성 (마지막으로 그은 자리)
+    grid[lastCell] = TENB; paintCell(lastCell);
+    tenMade++;
+    maxChain = Math.max(maxChain, n);
+    $('tenProg').textContent = '🔟 '+Math.min(tenMade,tenGoal)+'/'+tenGoal;
+    $('tenProg').classList.toggle('hot', tenGoal - tenMade === 1);
+
+    // 첫 안내: 인접 TEN 쌍이 처음 생기면 기폭 방법을 한 번만 알려줌
+    if(!tenTut){
+      const tp = findTenPair();
+      if(tp){
+        tenTut = true; store.set('moaten_tut2', true);
+        setTimeout(()=>shout('TEN을 이어 그어 💥 터뜨려 보세요!'), 550);
+        tp.forEach(x=>cells[x] && cells[x].classList.add('hint'));
+        setTimeout(()=>tp.forEach(x=>cells[x] && cells[x].classList.remove('hint')), 4500);
+      }
+    }
+
+    // 💥 MEGA TEN: 게이지 가득 찬 상태에서 만든 TEN은 반경 2칸을 쓸어버림
+    let megaFired = false;
+    if(megaCount >= MEGA_NEED){
+      megaFired = true;
+      megaCount = 0;
+      const mr=Math.floor(lastCell/COLS), mc=lastCell%COLS;
+      for(let dr=-2;dr<=2;dr++) for(let dc=-2;dc<=2;dc++){
+        const nr=mr+dr, nc=mc+dc;
+        if(nr<0||nr>=ROWS||nc<0||nc>=COLS) continue;
+        const j=nr*COLS+nc;
+        const v=grid[j];
+        if(v>0 && v!==STONE && v!==TENB && !removed.has(j)){
+          removed.add(j); extra++;
+          explode(j); bombSet.delete(j); grid[j]=0; paintCell(j);
+        }
+      }
+      blastPts += 60;
+      shakeBoard();
+    } else {
+      megaCount++;
+    }
+    updateMegaUI();
+
+    // 🪨 돌 파괴는 오직 이 방법뿐: 새 TEN의 바로 옆(8방향)에 붙은 돌
+    {
+      const sr=Math.floor(lastCell/COLS), sc=lastCell%COLS;
+      for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
+        if(dr===0&&dc===0) continue;
+        const nr=sr+dr, nc=sc+dc;
+        if(nr<0||nr>=ROWS||nc<0||nc>=COLS) continue;
+        const j=nr*COLS+nc;
+        if(grid[j]===STONE){
+          explode(j); grid[j]=0; paintCell(j); extra++;
+          if(sparkleSet.has(j)){
+            sparkleSet.delete(j);
+            grantOn(true, x=>{ grid[x]=WILD; });
+            shout('✨ 보너스 ★ 획득!');
+          }
+        }
+      }
+    }
+
+    // 연출 우선순위: MEGA > 긴 연결 > 목표 임박
+    if(megaFired){
+      shout('💥 MEGA TEN!!', true);
+    } else if(n>=6){ shout('👑 LEGEND TEN! '+n+'칸');
+    } else if(n===5){ shout('AMAZING! ★ 획득');
+    } else if(n===4){ shout('GREAT! 💣 획득');
+    } else if(tenGoal - tenMade === 1){ shout('ONE MORE! 🔟');
+    }
+
+    // 점수·시간
+    let pts = n*n*combo + extra*2 + blastPts;
+    const timeAdd = n - 1;
+    if(fever) pts *= 2;
+    score += pts; $('scoreVal').textContent = score;
+    sndPop(Math.min(combo,6));
+    if(navigator.vibrate) navigator.vibrate(combo>=2 ? [20,30,20] : 20);
+
+    // 보충량 적립: 직접 지운 것의 50% + 폭발로 사라진 것의 30%
+    pendingSpawn += Math.ceil(n/2) + Math.round(extra*0.3);
+
     const p = boardPos(ev);
-    const st = document.createElement('div');
-    st.className='stampFx'; st.textContent='十';
-    st.style.left=p.x+'px'; st.style.top=p.y+'px';
-    board.appendChild(st);
-    setTimeout(()=>st.remove(), 600);
+    plusFx(p.x, p.y-14, '+'+pts + (blastPts?' 💥':'') + (fever ? ' 🔥' : (combo>=2 ? ' ×'+combo : '')), false);
+    if(timeAdd>0){
+      const wasCrit = (deadline - Date.now())/1000 <= 10;
+      deadline += timeAdd*1000;
+      plusFx(p.x, p.y-46, '⏱ +'+timeAdd+'초', true);
+      if(wasCrit) flashTimer();
+      if(n>=3) sndTime();
+    }
+    updateBestGap();
+    if(!tutDone){ tutDone=true; store.set('moaten_tut', true); stopTutorial(); }
+    lastAction = now; clearHint();
 
-    const pf = document.createElement('div');
-    pf.className='plusFx'; pf.textContent='+'+pts;
-    pf.style.left=p.x+'px'; pf.style.top=(p.y-20)+'px';
-    board.appendChild(pf);
-    setTimeout(()=>pf.remove(), 850);
+    setTimeout(refill, 140);
+  } else if(targets.length>0){
+    sndFail();
   }
   clearSelection();
 }
 
-/* ===== 게임 종료 ===== */
-function endGame(){
+function ghostClass(v){ return v===WILD ? 'wild' : (v===STONE ? 'stone' : (v===TENB ? 'tenblock' : 'v'+v)); }
+function explode(i){
+  const el = cells[i];
+  const ghost = document.createElement('div');
+  ghost.className = 'pop ' + ghostClass(grid[i]);
+  ghost.style.left = el.offsetLeft+'px';
+  ghost.style.top = el.offsetTop+'px';
+  ghost.style.width = el.offsetWidth+'px';
+  ghost.style.height = el.offsetHeight+'px';
+  ghost.style.fontSize = el.style.fontSize;
+  ghost.textContent = grid[i]===WILD ? '★' : (grid[i]===STONE ? '🪨' : (grid[i]===TENB ? '10' : grid[i]));
+  board.appendChild(ghost);
+  setTimeout(()=>ghost.remove(), 320);
+
+  const [cx,cy] = cellCenter(i);
+  const col = getComputedStyle(el).color;
+  for(let k=0;k<5;k++){
+    const pt = document.createElement('div');
+    pt.className='particle';
+    pt.style.background = col;
+    pt.style.left = cx+'px'; pt.style.top = cy+'px';
+    const ang = Math.random()*6.28, dist = 18+Math.random()*26;
+    pt.style.setProperty('--dx', Math.cos(ang)*dist+'px');
+    pt.style.setProperty('--dy', Math.sin(ang)*dist+'px');
+    board.appendChild(pt);
+    setTimeout(()=>pt.remove(), 520);
+  }
+}
+function plusFx(x, y, text, kind){
+  const pf = document.createElement('div');
+  pf.className = 'plusFx' + (kind==='info' ? ' info' : (kind ? ' time' : ''));
+  pf.textContent = text;
+  pf.style.left=x+'px'; pf.style.top=y+'px';
+  board.appendChild(pf);
+  setTimeout(()=>pf.remove(), 950);
+}
+function shout(text, mega){
+  const el = $('shout');
+  el.textContent = text;
+  el.className = mega ? 'mega' : '';
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(()=>el.classList.remove('show'), 950);
+}
+function shakeBoard(){
+  board.classList.remove('shake');
+  void board.offsetWidth;
+  board.classList.add('shake');
+  if(navigator.vibrate) navigator.vibrate([30,40,30]);
+}
+function updateMegaUI(){
+  const wrap = $('megaWrap');
+  const dots = wrap.querySelectorAll('.mdot');
+  dots.forEach((d,k)=>d.classList.toggle('on', k < megaCount));
+  const ready = megaCount >= MEGA_NEED;
+  wrap.classList.toggle('ready', ready);
+  $('megaLbl').textContent = ready ? 'MEGA READY!' : 'MEGA';
+}
+function updateBestGap(){
+  const chip = $('bestGap');
+  if(best>0 && !newBestHit && score < best && best-score <= 300){
+    chip.style.display='block';
+    chip.textContent = '🏆 '+(best-score)+'점 남음';
+  } else {
+    chip.style.display='none';
+  }
+  if(best>0 && score > best && !newBestHit){
+    newBestHit = true;
+    $('scoreVal').classList.add('gold');
+    shout('🎉 NEW BEST!');
+    tone(700,.1,'triangle',.15); tone(900,.1,'triangle',.15,.1); tone(1150,.2,'triangle',.15,.2);
+  }
+}
+function flashTimer(){
+  const f = $('timerFill');
+  f.classList.add('gain');
+  setTimeout(()=>f.classList.remove('gain'), 450);
+}
+function showCombo(c){
+  const chip = $('comboChip');
+  chip.textContent = '×'+c+' 콤보!';
+  chip.classList.remove('show');
+  void chip.offsetWidth;
+  chip.classList.add('show');
+  clearTimeout(chip._t);
+  chip._t = setTimeout(()=>chip.classList.remove('show'), 900);
+}
+
+/* 중력 + 보충: 위 블록이 떨어지고, 지운 양의 절반만 새 숫자가 위에서 투입됨 */
+function refill(){
+  const fallDist = new Array(COLS*ROWS).fill(0);
+  for(let c=0;c<COLS;c++){
+    let write = ROWS-1;
+    for(let r=ROWS-1;r>=0;r--){
+      const i=r*COLS+c;
+      if(grid[i]===TENB){          // 🔟 TEN은 고정 지형: 그 위로는 별도 층
+        write = r-1;
+        continue;
+      }
+      if(grid[i]>0){
+        if(write!==r){
+          const k = write*COLS+c;
+          grid[k] = grid[i];
+          grid[i] = 0;
+          if(bombSet.has(i)){ bombSet.delete(i); bombSet.add(k); }
+          if(sparkleSet.has(i)){ sparkleSet.delete(i); sparkleSet.add(k); }
+          fallDist[k] = write - r;
+        }
+        write--;
+      }
+    }
+  }
+  // 보충 투입 (열 맨 위가 빈 곳 중 무작위, 그 열의 가장 아래 빈칸으로)
+  let spawn = pendingSpawn; pendingSpawn = 0;
+  while(spawn>0){
+    const opts=[];
+    for(let c=0;c<COLS;c++){ if(grid[c]===0) opts.push(c); }
+    if(!opts.length) break;
+    const c = opts[Math.floor(Math.random()*opts.length)];
+    let r=0;
+    while(r+1<ROWS && grid[(r+1)*COLS+c]===0) r++;
+    const k=r*COLS+c;
+    grid[k]=randVal();
+    fallDist[k]=r+3;
+    spawn--;
+  }
+  grid.forEach((_,i)=>paintCell(i));
+  for(let i=0;i<COLS*ROWS;i++){
+    const d = fallDist[i];
+    if(d>0 && grid[i]>0){
+      const el=cells[i];
+      el.classList.remove('fall');
+      el.style.transform = `translateY(${-d*cellSize}px)`;
+      void el.offsetWidth;
+      el.classList.add('fall');
+      el.style.transform = 'translateY(0)';
+      setTimeout(()=>el.classList.remove('fall'), 320);
+    }
+  }
+  // 목표 달성: 바로 넘어가지 않고 '마지막 기폭' 기회를 줌
+  if(tenMade >= tenGoal && !clearReady){
+    clearReady = true;
+    $('tenProg').textContent = '🏆 CLEAR READY!';
+    $('tenProg').classList.add('hot');
+    if(findTenPair()){
+      setTimeout(()=>shout('🏆 CLEAR READY! 마지막 기폭! 💥'), 250);
+      tone(660,.12,'triangle',.14); tone(880,.16,'triangle',.14,.12);
+    } else {
+      setTimeout(()=>shout('🏆 목표 달성!'), 250);
+      setTimeout(()=>levelUp(true), 1200);   // 기폭할 TEN 연결이 없으면 잠시 후 클리어
+    }
+    return;
+  }
+  if(!hasMoves()){
+    setTimeout(shuffleBoard, 350);
+  }
+}
+
+/* 막혔을 때: TEN·돌·목표는 그대로, 1~9와 ★ 값만 다시 섞음 (-3초) */
+function shuffleBoard(){
+  if(!playing || transiting) return;
+  transiting = true;
+
+  function doShuffle(){
+    const pos=[], vals=[];
+    for(let i=0;i<COLS*ROWS;i++){
+      const v=grid[i];
+      if((v>=1 && v<=9) || v===WILD){ pos.push(i); vals.push(v); }
+    }
+    for(let k=vals.length-1;k>0;k--){
+      const j=Math.floor(Math.random()*(k+1));
+      [vals[k],vals[j]]=[vals[j],vals[k]];
+    }
+    pos.forEach((i,k)=>{ grid[i]=vals[k]; });
+  }
+  let tries = 0;
+  doShuffle();
+  while(!hasMoves() && tries<6){ doShuffle(); tries++; }
+  if(!hasMoves()){
+    // 어떤 배치로도 10이 불가능한 숫자 구성 → 새 숫자를 투입해 재시도
+    let injected = 0;
+    while(!hasMoves() && injected<8){
+      const empties=[];
+      for(let i=0;i<COLS*ROWS;i++){ if(grid[i]===0) empties.push(i); }
+      if(!empties.length) break;
+      grid[empties[Math.floor(Math.random()*empties.length)]] = randVal();
+      injected++;
+    }
+  }
+  grid.forEach((_,i)=>paintCell(i));
+
+  if(!hasMoves()){
+    // 그래도 불가능하면 마지막 안전장치: 다음 레벨로
+    transiting = false;
+    levelUp(false);
+    return;
+  }
+  deadline -= 3000;
+  const chip = $('levelChip');
+  $('lvBig').textContent = '🔀 다시 섞기';
+  $('lvSub').textContent = '만들 수 있는 10이 없어요 · ⏱ -3초';
+  chip.classList.add('show');
+  tone(300,.1,'square',.08); tone(240,.14,'square',.08,.1);
+  setTimeout(()=>{
+    chip.classList.remove('show');
+    lastAction = Date.now(); clearHint();
+    transiting = false;
+  }, 1100);
+}
+
+/* 다음 레벨: TEN 목표 달성 +100점 +10초, 막혀서 넘어가면 +5초 */
+function levelUp(goal){
   if(!playing) return;
-  playing = false;
+  transiting = true;
+  feverUntil = 0;
+  level++;
+  const bonusPts = goal ? 200 : 0;
+  const bonusSec = goal ? 10 : 5;
+  score += bonusPts; $('scoreVal').textContent = score;
+  deadline += bonusSec*1000;
+  tenMade = 0;
+  clearReady = false;
+  tenGoal = Math.min(16, 2*(3 + level));
+  $('tenProg').classList.remove('hot');
+  $('tenProg').textContent = '🔟 0/'+tenGoal;
+  $('lvNum').textContent = level;
+  $('lvBig').textContent = 'LEVEL ' + level;
+  $('lvSub').textContent = (goal ? '🏆 TEN 목표 달성! +200점 · ' : '') + '⏱ +' + bonusSec + '초';
+  const chip = $('levelChip');
+  chip.classList.add('show');
+  tone(660,.12,'triangle',.15); tone(880,.16,'triangle',.15,.12);
+  setTimeout(()=>{
+    chip.classList.remove('show');
+    fillBoard();
+    combo = 0; lastClear = 0;
+    lastAction = Date.now(); clearHint();
+    transiting = false;
+  }, 1300);
+}
+
+/* 인접(8방향)한 TEN 쌍이 있는지 → 기폭 가능 여부 */
+function findTenPair(){
+  for(let i=0;i<COLS*ROWS;i++){
+    if(grid[i]!==TENB) continue;
+    const r=Math.floor(i/COLS), c=i%COLS;
+    for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
+      if(dr===0&&dc===0) continue;
+      const nr=r+dr, nc=c+dc;
+      if(nr<0||nr>=ROWS||nc<0||nc>=COLS) continue;
+      const j=nr*COLS+nc;
+      if(grid[j]===TENB) return [i, j];
+    }
+  }
+  return null;
+}
+
+/* 10을 만들 수 있는 "이어진 경로"가 하나라도 남았는지 (★·🪨 반영, 깊이우선탐색) */
+function hasMoves(){
+  const visited = new Array(COLS*ROWS).fill(false);
+  function neighbors(i){
+    const r=Math.floor(i/COLS), c=i%COLS, out=[];
+    for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
+      if(dr===0 && dc===0) continue;
+      const nr=r+dr, nc=c+dc;
+      if(nr>=0 && nr<ROWS && nc>=0 && nc<COLS) out.push(nr*COLS+nc);
+    }
+    return out;
+  }
+  function ok(s,w){ return w===0 ? s===10 : (10-s>=w && 10-s<=9*w); }
+  function dfs(i, s, w){
+    for(const j of neighbors(i)){
+      const v = grid[j];
+      if(visited[j] || v<=0 || v===STONE || v===TENB) continue;
+      const ns = s + (v===WILD ? 0 : v);
+      const nw = w + (v===WILD ? 1 : 0);
+      if(ns + nw > 10) continue;         // ★를 전부 1로 쳐도 10 초과면 가지치기
+      if(ok(ns, nw)) return true;
+      visited[j] = true;
+      if(dfs(j, ns, nw)){ visited[j]=false; return true; }
+      visited[j] = false;
+    }
+    return false;
+  }
+  for(let i=0;i<COLS*ROWS;i++){
+    const v = grid[i];
+    if(v<=0 || v===STONE || v===TENB) continue;
+    const s = v===WILD ? 0 : v, w = v===WILD ? 1 : 0;
+    if(s + w > 10) continue;
+    visited[i] = true;
+    if(dfs(i, s, w)){ visited[i]=false; return true; }
+    visited[i] = false;
+  }
+  return false;
+}
+
+/* ===== 힌트: 8초간 못 지우면 실제 가능한 조합 하나를 깜빡여 알려줌 ===== */
+function findHintPath(){
+  const visited = new Array(COLS*ROWS).fill(false);
+  const stack = [];
+  function neighbors(i){
+    const r=Math.floor(i/COLS), c=i%COLS, out=[];
+    for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
+      if(dr===0 && dc===0) continue;
+      const nr=r+dr, nc=c+dc;
+      if(nr>=0 && nr<ROWS && nc>=0 && nc<COLS) out.push(nr*COLS+nc);
+    }
+    return out;
+  }
+  function ok(s,w){ return w===0 ? s===10 : (10-s>=w && 10-s<=9*w); }
+  function dfs(i, s, w){
+    for(const j of neighbors(i)){
+      const v = grid[j];
+      if(visited[j] || v<=0 || v===STONE || v===TENB) continue;
+      const ns = s + (v===WILD ? 0 : v);
+      const nw = w + (v===WILD ? 1 : 0);
+      if(ns + nw > 10) continue;
+      if(ok(ns, nw)){ stack.push(j); return true; }
+      visited[j]=true; stack.push(j);
+      if(dfs(j, ns, nw)) return true;
+      visited[j]=false; stack.pop();
+    }
+    return false;
+  }
+  for(let i=0;i<COLS*ROWS;i++){
+    const v = grid[i];
+    if(v<=0 || v===STONE || v===TENB) continue;
+    const s = v===WILD?0:v, w = v===WILD?1:0;
+    if(s + w > 10) continue;
+    visited[i]=true; stack.length=0; stack.push(i);
+    if(dfs(i, s, w)) return [...stack];
+    visited[i]=false;
+  }
+  return null;
+}
+function showHint(){
+  const p = findHintPath();
+  if(!p) return;
+  hintCells = p;
+  p.forEach(i=>cells[i] && cells[i].classList.add('hint'));
+}
+function clearHint(){
+  hintCells.forEach(i=>cells[i] && cells[i].classList.remove('hint'));
+  hintCells = [];
+}
+
+/* ===== 튜토리얼: 실제 유효한 짝을 손가락이 오간다 ===== */
+function pairOK(a,b){
+  if(a===STONE || b===STONE || a===TENB || b===TENB || a<=0 || b<=0) return false;
+  const w = (a===WILD?1:0) + (b===WILD?1:0);
+  const s = (a===WILD?0:a) + (b===WILD?0:b);
+  return w===0 ? s===10 : (10-s>=w && 10-s<=9*w);
+}
+function findPair(){
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+    const i=r*COLS+c;
+    if(grid[i]<=0 || grid[i]===STONE || grid[i]===TENB) continue;
+    if(c+1<COLS && pairOK(grid[i], grid[i+1])) return [i, i+1];
+    if(r+1<ROWS && pairOK(grid[i], grid[i+COLS])) return [i, i+COLS];
+    if(r+1<ROWS && c+1<COLS && pairOK(grid[i], grid[i+COLS+1])) return [i, i+COLS+1];
+    if(r+1<ROWS && c>0 && pairOK(grid[i], grid[i+COLS-1])) return [i, i+COLS-1];
+  }
+  return null;
+}
+function startTutorial(){
+  const pair = findPair();
+  if(!pair) return;
+  const hand=$('tutHand'), msg=$('tutMsg');
+  hand.style.display='block'; msg.style.display='block';
+  const [a,b]=pair;
+  const [ax,ay]=cellCenter(a), [bx,by]=cellCenter(b);
+  msg.style.top = Math.max(6, Math.min(ay,by)-52)+'px';
+  let toB=false;
+  const move=()=>{
+    const [x,y]= toB ? [bx,by] : [ax,ay];
+    hand.style.left=(x-8)+'px'; hand.style.top=(y-4)+'px';
+    toB=!toB;
+  };
+  move(); 
+  tutTimer=setInterval(move, 1150);
+}
+function stopTutorial(){
+  clearInterval(tutTimer);
+  $('tutHand').style.display='none';
+  $('tutMsg').style.display='none';
+}
+
+/* ===== 종료 ===== */
+function endGame(reason){
+  if(!playing) return;
+  playing=false;
+  feverUntil = 0;
+  clearHint();
+  document.body.classList.remove('fever');
   clearInterval(timerId);
   clearSelection();
+  stopTutorial();
+  sndEnd();
 
   $('finalScore').textContent = score;
-  const isBest = score > best;
-  if(isBest){ best = score; store.set('moaten_best', best); $('bestVal').textContent = best; }
+  $('endReason').textContent = '⏱ 시간 종료 — Lv.' + level + ' 도달!';
+  $('maxComboLine').textContent = maxCombo>=2 ? '🔥 최대 콤보 ×'+maxCombo : '';
+  const bestChain = store.get('moaten_chain', 0);
+  if(maxChain > bestChain){
+    store.set('moaten_chain', maxChain);
+    $('chainLine').textContent = '🏆 최장 TEN '+maxChain+'칸 — 신기록!';
+  } else {
+    $('chainLine').textContent = maxChain>=2 ? '최장 TEN '+maxChain+'칸 (기록 '+Math.max(bestChain,maxChain)+'칸)' : '';
+  }
+  const isBest = score>best;
+  if(isBest){ best=score; store.set('moaten_best',best); $('bestVal').textContent=best; }
   $('newBest').textContent = isBest ? '🎉 최고 기록 갱신!' : '';
-
   $('nameInput').value = store.get('moaten_name','');
-
   saveLocalRank(score);
   showTab('local');
   $('endOverlay').style.display='flex';
-
-  submitOnline(score);   // 온라인 랭킹(설정된 경우)
+  submitOnline(score);
 }
 
-/* ===== 내 기록(이 기기) 랭킹 ===== */
+/* ===== 내 기록 ===== */
 function saveLocalRank(sc){
   const list = store.get('moaten_ranks', []);
   list.push({score:sc, ts:Date.now()});
@@ -519,84 +1484,76 @@ function saveLocalRank(sc){
 function renderLocal(){
   const list = store.get('moaten_ranks', []);
   const box = $('rankList');
-  if(!list.length){ box.innerHTML = '<div class="rankNote">아직 기록이 없습니다.</div>'; return; }
+  if(!list.length){ box.innerHTML='<div class="rankNote">아직 기록이 없습니다.</div>'; return; }
+  let marked=false;
   box.innerHTML = list.map((r,i)=>{
-    const d = new Date(r.ts);
-    const dateStr = (d.getMonth()+1)+'/'+d.getDate();
-    const me = (r.score===score && !r._shown) ? ' me' : '';
-    if(me) r._shown = true;
-    return `<div class="rankRow${me}"><span class="no">${i+1}</span><span class="nm">${dateStr}</span><span class="sc">${r.score}</span></div>`;
+    const d=new Date(r.ts);
+    const me=(!marked && r.score===score)?' me':'';
+    if(me) marked=true;
+    return `<div class="rankRow${me}"><span class="no">${i+1}</span><span class="nm">${d.getMonth()+1}/${d.getDate()}</span><span class="sc">${r.score}</span></div>`;
   }).join('');
 }
 
-/* ===== 온라인 랭킹 (Firebase 무료 DB, 설정 시 자동 작동) ===== */
-let lastSubmitKey = null;
-function esc(s){ return s.replace(/[<>&"']/g, c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c])); }
-
+/* ===== 온라인 랭킹 ===== */
+let lastSubmitKey=null;
+function esc(s){ return String(s).replace(/[<>&"']/g, c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c])); }
 async function submitOnline(sc){
   if(!FIREBASE_URL) return;
-  const name = ($('nameInput').value || '무명').slice(0,10);
+  const name = ($('nameInput').value||'무명').slice(0,10);
   store.set('moaten_name', name);
   try{
-    const res = await fetch(FIREBASE_URL + '/scores.json', {
-      method:'POST',
-      body: JSON.stringify({ name, score: sc, ts: Date.now() })
-    });
+    const res = await fetch(FIREBASE_URL+'/scores.json', {method:'POST', body:JSON.stringify({name, score:sc, lv:level, ts:Date.now()})});
     const data = await res.json();
     lastSubmitKey = data && data.name;
-  }catch(e){ /* 인터넷 안 되면 조용히 넘어감 */ }
+  }catch(e){}
 }
-
 async function renderOnline(){
-  const box = $('rankList');
+  const box=$('rankList');
   if(!FIREBASE_URL){
-    box.innerHTML = '<div class="rankNote">온라인 랭킹이 아직 연결되지 않았습니다.<br>(가이드 문서의 "온라인 랭킹 켜기" 참고)</div>';
+    box.innerHTML='<div class="rankNote">온라인 랭킹이 아직 연결되지 않았습니다.<br>(가이드 문서의 "온라인 랭킹 켜기" 참고)</div>';
     return;
   }
-  box.innerHTML = '<div class="rankNote">불러오는 중...</div>';
+  box.innerHTML='<div class="rankNote">불러오는 중...</div>';
   try{
-    const res = await fetch(FIREBASE_URL + '/scores.json?orderBy=%22score%22&limitToLast=50');
+    const res = await fetch(FIREBASE_URL+'/scores.json?orderBy=%22score%22&limitToLast=50');
     const data = await res.json();
-    if(!data){ box.innerHTML = '<div class="rankNote">아직 등록된 기록이 없습니다.</div>'; return; }
-    const rows = Object.entries(data)
-      .map(([k,v])=>({key:k, ...v}))
-      .sort((a,b)=>b.score-a.score);
+    if(!data){ box.innerHTML='<div class="rankNote">아직 등록된 기록이 없습니다.</div>'; return; }
+    const rows = Object.entries(data).map(([k,v])=>({key:k,...v})).sort((a,b)=>b.score-a.score);
     box.innerHTML = rows.map((r,i)=>{
-      const me = r.key===lastSubmitKey ? ' me' : '';
-      return `<div class="rankRow${me}"><span class="no">${i+1}</span><span class="nm">${esc(String(r.name||'무명'))}</span><span class="sc">${r.score}</span></div>`;
+      const me=r.key===lastSubmitKey?' me':'';
+      return `<div class="rankRow${me}"><span class="no">${i+1}</span><span class="nm">${esc(r.name||'무명')}</span><span class="sc">${r.score}</span></div>`;
     }).join('');
   }catch(e){
-    box.innerHTML = '<div class="rankNote">랭킹을 불러오지 못했습니다.<br>인터넷 연결을 확인해 주세요.</div>';
+    box.innerHTML='<div class="rankNote">랭킹을 불러오지 못했습니다.<br>인터넷 연결을 확인해 주세요.</div>';
   }
 }
-
-/* 닉네임 바꾸면 다시 제출 대신 저장만 */
 $('nameInput').addEventListener('change', ()=>{
-  store.set('moaten_name', ($('nameInput').value||'').slice(0,10));
+  const nm=($('nameInput').value||'').slice(0,10);
+  store.set('moaten_name', nm);
 });
 
-/* ===== 탭 ===== */
-function showTab(which){
-  $('tabLocal').classList.toggle('on', which==='local');
-  $('tabOnline').classList.toggle('on', which==='online');
-  if(which==='local') renderLocal(); else renderOnline();
+function showTab(w){
+  $('tabLocal').classList.toggle('on', w==='local');
+  $('tabOnline').classList.toggle('on', w==='online');
+  if(w==='local') renderLocal(); else renderOnline();
 }
-$('tabLocal').onclick = ()=>showTab('local');
-$('tabOnline').onclick = ()=>showTab('online');
+$('tabLocal').onclick=()=>showTab('local');
+$('tabOnline').onclick=()=>showTab('online');
 
-/* ===== 버튼 ===== */
-$('startBtn').onclick = ()=>{
-  $('startOverlay').style.display='none';
-  newGame();
-};
-$('retryBtn').onclick = ()=>{
-  $('endOverlay').style.display='none';
-  newGame();
-};
+$('startBtn').onclick=()=>{ ensureAudio(); $('startOverlay').style.display='none'; newGame(); };
+$('retryBtn').onclick=()=>{ $('endOverlay').style.display='none'; newGame(); };
 
-/* 첫 화면 준비 */
-newGame(); playing=false; clearInterval(timerId); // 배경용 보드만 미리 그려두기
-$('timerFill').style.width='100%';
+/* 배경용 미리보기 보드 */
+newGame(); playing=false; clearInterval(timerId); stopTutorial();
+$('timerFill').style.width='100%'; $('timeNum').textContent=GAME_TIME+'초';
+
+/* ===== v1.0 출시 정리 =====
+   - 광고: 아직 없으므로 자리 숨김 (AdMob 승인 후 아래 한 줄만 지우면 다시 표시됨)
+   - 온라인 랭킹: FIREBASE_URL을 채우면 자동으로 탭이 나타남 */
+$('adSlot').style.display = 'none';
+if(!FIREBASE_URL){
+  $('tabOnline').style.display = 'none';
+}
 
 /* 오프라인 지원(앱 요건) */
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
