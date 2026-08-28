@@ -1,6 +1,18 @@
 <!doctype html>
 <html lang="ko" class="w-full h-full overflow-hidden">
   <head>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#3A1F0D">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('sw.js').catch(function () {});
+        });
+      }
+    </script>
+    
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>모아텐 — 합쳐서 10</title>
