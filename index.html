@@ -165,47 +165,59 @@ Error generating stack: `+c.message+`
   <body class="bg-[#FAF8F1] select-none text-[#3B4652] antialiased overflow-hidden m-0 p-0 w-full h-full">
     <div id="root" class="w-full h-full flex justify-center items-center overflow-hidden"></div>
       <script>
-    /* 모아텐 뒤로가기 가드 v1 — 뒤로가기 시 즉시 종료 대신 [게임 중단 / 계속하기] 선택창 표시 */
+    /* 모아텐 뒤로가기 가드 v3 — 더블백 종료 패턴. 창 열림 상태에선 기록을 다시 쌓지 않아
+       다음 뒤로가기가 시스템 종료로 자연 통과됨. (TWA에선 웹이 앱을 직접 닫을 수 없음) */
     (function(){
-      if (window.__moatenBackGuard) return; window.__moatenBackGuard = 1;
-      var exiting = false, open = false, ov = null;
+      if (window.__moatenBackGuard) return; window.__moatenBackGuard = 3;
+      var open = false, ov = null, msgEl = null, armed = false;
       var ko = ((navigator.language||'ko').toLowerCase().indexOf('ko')===0);
-      var TXT = ko ? {t:'게임을 중단할까요?', m:'진행 중인 게임은 저장되며,\n다시 실행하면 이어서 할 수 있어요.', cont:'▶ 계속하기', quit:'게임 중단'}
-                   : {t:'Quit the game?', m:'Your progress is saved —\nyou can continue next time.', cont:'▶ Continue', quit:'Quit'};
-      try { history.pushState({mg:1}, ''); } catch(e){}
+      var TXT = ko ? {t:'게임을 중단할까요?', m:'진행 상황은 저장돼요.\n뒤로가기를 한 번 더 누르면 종료됩니다.', cont:'▶ 계속하기', quit:'게임 중단', bye:'한 번 더 뒤로가기를 누르면 종료됩니다 👋'}
+                   : {t:'Quit the game?', m:'Your progress is saved.\nPress back again to exit.', cont:'▶ Continue', quit:'Quit', bye:'Press back once more to exit 👋'};
 
-      function hide(){ if(ov){ ov.remove(); ov=null; } open=false; }
+      function push(){ try { history.pushState({mg:1}, ''); } catch(e){} }
+      function arm(){ if (armed) return; armed = true; push(); }
+      ['pointerdown','touchstart','mousedown','keydown'].forEach(function(ev){
+        window.addEventListener(ev, arm, {capture:true, passive:true});
+      });
+
+      function hide(rearm){ if(ov){ ov.remove(); ov=null; } open=false; if(rearm) push(); }
       function show(){
         if (open) return; open = true;
         ov = document.createElement('div');
         ov.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.6);backdrop-filter:blur(2px);display:flex;align-items:center;justify-content:center;padding:24px;';
         var card = document.createElement('div');
         card.style.cssText = 'width:100%;max-width:300px;background:linear-gradient(#5C3418,#3A1F0D);border:3px solid #8E5E35;border-radius:24px;box-shadow:0 10px 30px rgba(0,0,0,.5);padding:18px 16px;display:flex;flex-direction:column;gap:10px;text-align:center;font-family:inherit;';
-        card.innerHTML =
-          '<div style="font-size:17px;font-weight:900;color:#FFECC7;">'+TXT.t+'</div>'+
-          '<div style="font-size:12.5px;font-weight:700;color:#E8C79A;white-space:pre-line;line-height:1.5;">'+TXT.m+'</div>';
+        var title = document.createElement('div');
+        title.style.cssText = 'font-size:17px;font-weight:900;color:#FFECC7;';
+        title.textContent = TXT.t;
+        msgEl = document.createElement('div');
+        msgEl.style.cssText = 'font-size:12.5px;font-weight:700;color:#E8C79A;white-space:pre-line;line-height:1.5;';
+        msgEl.textContent = TXT.m;
         var bCont = document.createElement('button');
         bCont.textContent = TXT.cont;
         bCont.style.cssText = 'width:100%;padding:11px 0;border-radius:14px;background:linear-gradient(#9CD0FF,#5FA8E8,#2E6DB4);border:2px solid #DCEEFF;box-shadow:0 4px 0 #1B4A80;font-size:16px;font-weight:900;color:#0B2C50;';
         var bQuit = document.createElement('button');
         bQuit.textContent = TXT.quit;
         bQuit.style.cssText = 'width:100%;padding:10px 0;border-radius:14px;background:linear-gradient(#F09A8A,#D9564A,#A83228);border:2px solid #FFD9D2;box-shadow:0 4px 0 #6E1F17;font-size:14.5px;font-weight:900;color:#FFF3F0;';
-        bCont.onclick = function(){ hide(); };
-        bQuit.onclick = function(){
-          exiting = true; hide();
-          try { history.go(-2); } catch(e){}
-          setTimeout(function(){ try{ window.close(); }catch(e){} }, 250);
+        bCont.onclick = function(){ hide(true); };            /* 계속하기: 창 닫고 가드 재장전 */
+        bQuit.onclick = function(){                            /* 게임 중단: 종료 시도 → 안 되면 안내로 전환 */
+          try { window.close(); } catch(e){}
+          setTimeout(function(){
+            if (!document.hidden && ov) {
+              msgEl.textContent = TXT.bye;
+              bQuit.style.display = 'none';
+            }
+          }, 200);
         };
-        ov.onclick = function(ev){ if (ev.target === ov) hide(); };
+        ov.onclick = function(ev){ if (ev.target === ov) hide(true); };
+        card.appendChild(title); card.appendChild(msgEl);
         card.appendChild(bCont); card.appendChild(bQuit);
         ov.appendChild(card); document.body.appendChild(ov);
       }
 
-      window.addEventListener('popstate', function(){
-        if (exiting) return;
-        try { history.pushState({mg:1}, ''); } catch(e){}
-        if (open) hide(); else show();   /* 창 열린 상태에서 또 뒤로가기 = 계속하기 */
-      });
+      /* 뒤로가기: 가드 소모 → 창 표시. 창이 열린 동안엔 기록을 다시 쌓지 않으므로
+         (기록 바닥 상태) 다음 뒤로가기는 시스템이 받아 앱을 종료함 = 더블백 종료 */
+      window.addEventListener('popstate', function(){ show(); });
     })();
     </script>
   </body>
