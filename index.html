@@ -629,10 +629,10 @@ div, span, p, small, strong, label {
     })();
     </script>
       <script>
-    /* 모아텐 뒤로가기 가드 v4 — 더블백 종료 패턴. 창 열림 상태에선 기록을 다시 쌓지 않아
+    /* 모아텐 뒤로가기 가드 v5 (무장 시점 수정) — 더블백 종료 패턴. 창 열림 상태에선 기록을 다시 쌓지 않아
        다음 뒤로가기가 시스템 종료로 자연 통과됨. (TWA에선 웹이 앱을 직접 닫을 수 없음) */
     (function(){
-      if (window.__moatenBackGuard) return; window.__moatenBackGuard = 4;
+      if (window.__moatenBackGuard) return; window.__moatenBackGuard = 5;
       var open = false, ov = null, msgEl = null, armed = false;
       var ko = ((navigator.language||'ko').toLowerCase().indexOf('ko')===0);
       var TXT = ko ? {t:'게임을 중단할까요?', m:'진행 상황은 저장돼요.\n게임 중단을 누르면 시작화면으로 돌아갑니다.', cont:'▶ 계속하기', quit:'게임 중단', bye:'시작화면으로 돌아갑니다 👋'}
@@ -649,7 +649,9 @@ div, span, p, small, strong, label {
         armed = true;
         push();
       }
-      ['pointerdown','touchstart','mousedown','keydown'].forEach(function(ev){
+      /* v5: 무장 시점을 '정식 사용자 조작'으로 인정되는 이벤트(손가락 떼기·클릭·키)로 이동.
+         터치의 pointerdown/touchstart는 사용자 조작 인정 전이라, 그때 쌓은 기록은 TWA에서 뒤로가기가 스킵함 */
+      ['pointerup','touchend','mouseup','click','keydown'].forEach(function(ev){
         window.addEventListener(ev, arm, {capture:true, passive:true});
       });
 
