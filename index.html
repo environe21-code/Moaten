@@ -395,6 +395,14 @@ div, span, p, small, strong, label {
      crossorigin="anonymous"></script>
 </head>
   <body class="bg-[#FAF8F1] select-none text-[#3B4652] antialiased overflow-hidden m-0 p-0 w-full h-full">
+    <div id="moaten-splash" style="position:fixed;inset:0;z-index:2147483000;display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;background:linear-gradient(#4A2A12,#2B1608);transition:opacity .35s">
+      <div style="font-size:36px;font-weight:900;color:#FFECC7;letter-spacing:2px;font-family:'Jua','Noto Sans KR',sans-serif;">모아<span style="color:#FF6B5A">TEN</span></div>
+      <div style="font-size:12px;font-weight:700;color:#C9A97E;">불러오는 중...</div>
+    </div>
+    <script>(function(){var s=document.getElementById('moaten-splash');function bye(){if(!s)return;s.style.opacity='0';setTimeout(function(){s&&s.remove();s=null},400)}
+      var t=setInterval(function(){var r=document.getElementById('root');if(r&&r.childElementCount>0){clearInterval(t);bye()}},80);
+      setTimeout(bye,15000);})();</script>
+
     <div id="root" class="w-full h-full flex justify-center items-center overflow-hidden"></div>
       <script id="moaten-hint8s-runtime">
     /* 8초 무진행 힌트 v4 — 타겟 러시는 현재 GOAL 숫자, 나머지 모드는 10 조합을 안내 */
