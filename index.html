@@ -417,7 +417,7 @@ div, span, p, small, strong, label {
   <body class="bg-[#FAF8F1] select-none text-[#3B4652] antialiased overflow-hidden m-0 p-0 w-full h-full">
     <div id="moaten-splash" style="position:fixed;inset:0;z-index:2147483000;display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;background:linear-gradient(#4A2A12,#2B1608);transition:opacity .35s">
       <div style="font-size:36px;font-weight:900;color:#FFECC7;letter-spacing:2px;font-family:'Jua','Noto Sans KR',sans-serif;">모아<span style="color:#FF6B5A">TEN</span></div>
-      <div style="font-size:12px;font-weight:700;color:#C9A97E;">불러오는 중...</div>
+      <div style="font-size:12px;font-weight:700;color:#C9A97E;">불러오는 중... v117.15</div>
     </div>
     <script>(function(){var s=document.getElementById('moaten-splash');function bye(){if(!s)return;s.style.opacity='0';setTimeout(function(){s&&s.remove();s=null},400)}
       var t=setInterval(function(){var r=document.getElementById('root');if(r&&r.childElementCount>0){clearInterval(t);bye()}},80);
@@ -628,7 +628,23 @@ div, span, p, small, strong, label {
       };
     })();
     </script>
-      <script>
+          <script>
+    /* [임시 진단] 뒤로가기 가드 상태 배지 — 원인 확인 후 제거 예정 */
+    (function(){
+      var b=document.createElement('div');
+      b.id='moaten-diag';
+      b.style.cssText='position:fixed;left:6px;bottom:6px;z-index:2147483646;pointer-events:none;font:700 11px/1.3 monospace;color:#FFE9C4;background:rgba(0,0,0,.55);padding:4px 7px;border-radius:8px;';
+      var st={push:0,pop:0,arm:0};
+      var _ps=history.pushState.bind(history);
+      history.pushState=function(){ st.push++; return _ps.apply(history,arguments); };
+      window.addEventListener('popstate',function(){ st.pop++; draw(); },true);
+      ['pointerup','touchend','click'].forEach(function(ev){ window.addEventListener(ev,function(){ st.arm++; setTimeout(draw,0); },true); });
+      function draw(){ b.textContent='v117.15 G'+(window.__moatenBackGuard||'?')+' | 터치:'+st.arm+' push:'+st.push+' pop:'+st.pop+' | hist:'+history.length; }
+      document.addEventListener('DOMContentLoaded',function(){ document.body.appendChild(b); draw(); });
+      setInterval(draw,500);
+    })();
+    </script>
+    <script>
     /* 모아텐 뒤로가기 가드 v5 (무장 시점 수정) — 더블백 종료 패턴. 창 열림 상태에선 기록을 다시 쌓지 않아
        다음 뒤로가기가 시스템 종료로 자연 통과됨. (TWA에선 웹이 앱을 직접 닫을 수 없음) */
     (function(){
