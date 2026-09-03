@@ -388,19 +388,15 @@ div, span, p, small, strong, label {
   @keyframes moatenInfoFade{0%{opacity:0;transform:translate(-50%,-50%) scale(.92)}12%{opacity:1;transform:translate(-50%,-50%) scale(1)}72%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-56%) scale(1)}}
   </style>
   <style>
-  /* 블록 나무결 질감 — 색은 유지, 결 무늬 층만 덧씌움 (아이콘 '10' 질감 참고) */
+  /* 블록 나무결 질감 v2 — 블렌드 모드 제거(모바일 GPU 부담 원인), 결의 명암을 텍스처 투명도에 구워 단일 층으로 합성 */
   .game-wood-block{position:relative;}
   .game-wood-block::after{
     content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
-    background-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='180'%20height='180'%3E%3Cfilter%20id='g'%20x='0'%20y='0'%20width='100%'%20height='100%'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.42%200.014'%20numOctaves='4'%20seed='11'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='saturate'%20values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA%20type='linear'%20slope='0.95'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect%20width='100%'%20height='100%'%20filter='url(%23g)'/%3E%3C/svg%3E");
-    background-size:180px 180px;
-    mix-blend-mode:multiply;opacity:.62;
-  }
-  /* 결 사이 밝은 하이라이트 줄로 입체감 보강 */
-  .game-wood-block::before{
-    content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
-    background:repeating-linear-gradient(90deg,rgba(255,240,215,.14) 0 1px,rgba(255,255,255,0) 1px 6px,rgba(70,35,15,.10) 6px 7px,rgba(255,255,255,0) 7px 13px);
-    mix-blend-mode:overlay;opacity:.7;
+    background-image:
+      repeating-linear-gradient(90deg,rgba(255,240,215,.10) 0 1px,rgba(255,255,255,0) 1px 6px,rgba(70,35,15,.07) 6px 7px,rgba(255,255,255,0) 7px 13px),
+      url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='180'%20height='180'%3E%3Cfilter%20id='g'%20x='0'%20y='0'%20width='100%'%20height='100%'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.42%200.014'%20numOctaves='3'%20seed='11'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='matrix'%20values='0%200%200%200%200.22%20%200%200%200%200%200.11%20%200%200%200%200%200.04%20%200.75%200%200%200%20-0.12'/%3E%3C/filter%3E%3Crect%20width='100%'%20height='100%'%20filter='url(%23g)'/%3E%3C/svg%3E");
+    background-size:auto,180px 180px;
+    opacity:.9;
   }
   </style>
     <link rel="manifest" href="manifest.json">
@@ -417,7 +413,7 @@ div, span, p, small, strong, label {
   <body class="bg-[#FAF8F1] select-none text-[#3B4652] antialiased overflow-hidden m-0 p-0 w-full h-full">
     <div id="moaten-splash" style="position:fixed;inset:0;z-index:2147483000;display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;background:linear-gradient(#4A2A12,#2B1608);transition:opacity .35s">
       <div style="font-size:36px;font-weight:900;color:#FFECC7;letter-spacing:2px;font-family:'Jua','Noto Sans KR',sans-serif;">모아<span style="color:#FF6B5A">TEN</span></div>
-      <div style="font-size:12px;font-weight:700;color:#C9A97E;">불러오는 중... v117.16</div>
+      <div style="font-size:12px;font-weight:700;color:#C9A97E;">불러오는 중... v117.17</div>
     </div>
     <script>(function(){var s=document.getElementById('moaten-splash');function bye(){if(!s)return;s.style.opacity='0';setTimeout(function(){s&&s.remove();s=null},400)}
       var t=setInterval(function(){var r=document.getElementById('root');if(r&&r.childElementCount>0){clearInterval(t);bye()}},80);
