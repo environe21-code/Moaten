@@ -1,37 +1,141 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>모아텐 개인정보처리방침</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>모아텐(MoaTEN) 개인정보처리방침 / Privacy Policy</title>
 <style>
-  body{font-family:system-ui,'Malgun Gothic',sans-serif; max-width:640px; margin:0 auto;
-       padding:32px 20px; color:#3B4652; line-height:1.8; background:#FAF8F1;}
-  h1{font-size:22px;} h2{font-size:16px; margin-top:28px;}
-  p,li{font-size:14px;}
+  body{margin:0;background:#FAF8F1;color:#3A2410;font-family:-apple-system,"Noto Sans KR","Malgun Gothic",sans-serif;line-height:1.7}
+  .wrap{max-width:760px;margin:0 auto;padding:28px 20px 60px}
+  h1{font-size:22px;margin:0 0 6px}
+  h2{font-size:17px;margin:32px 0 10px;padding-bottom:6px;border-bottom:2px solid #D4A36A}
+  h3{font-size:15px;margin:22px 0 6px;color:#6B3E12}
+  p,li{font-size:14.5px}
+  table{border-collapse:collapse;width:100%;margin:8px 0 12px;font-size:14px}
+  th,td{border:1px solid #D9C6A5;padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:#F1E3C6}
+  .meta{color:#7A5A3A;font-size:13px}
+  .box{background:#F3E8D2;border:1px solid #D9C6A5;border-radius:8px;padding:12px 14px;margin:12px 0}
+  hr.sep{border:0;border-top:1px dashed #C9A97E;margin:48px 0}
+  a{color:#8A4B12}
 </style>
 </head>
 <body>
-<h1>모아텐(MoaTen) 개인정보처리방침</h1>
-<p>시행일: 2026년 8월 10일</p>
+<div class="wrap">
+
+<h1>모아텐(MoaTEN) 개인정보처리방침</h1>
+<p class="meta">개발자: Chae Lab · 앱 패키지: io.github.environe21_code.twa · 시행일: 2026년 9월 29일</p>
+
+<p>Chae Lab(이하 "개발자")은 모바일 퍼즐 게임 <strong>모아텐(MoaTEN)</strong>(이하 "앱")을 제공하면서 이용자의 개인정보를 소중히 다루며, 관련 법령을 준수합니다. 이 방침은 앱이 어떤 정보를 어떤 목적으로 수집·보관하는지, 이용자가 어떻게 삭제를 요청할 수 있는지를 설명합니다.</p>
 
 <h2>1. 수집하는 정보</h2>
-<p>본 게임은 회원가입이 없으며, 다음 정보만 처리합니다.</p>
+<p>앱은 온라인 주간 랭킹 기능을 제공하기 위해 아래 정보만을 수집합니다. 회원가입, 이메일, 전화번호, 위치, 연락처, 사진 등은 <strong>수집하지 않습니다.</strong></p>
+<table>
+<tr><th style="width:26%">항목</th><th>내용</th><th style="width:22%">수집 방식</th></tr>
+<tr><td>익명 사용자 ID</td><td>Google Firebase Authentication의 익명 로그인 기능이 자동으로 발급하는 무작위 식별자. 이름·이메일 등 개인을 특정하는 정보와 연결되지 않습니다.</td><td>앱 실행 시 자동 발급</td></tr>
+<tr><td>별명</td><td>이용자가 랭킹 화면에서 직접 입력한 닉네임(최대 10자). 입력하지 않으면 저장되지 않습니다.</td><td>이용자 직접 입력(선택)</td></tr>
+<tr><td>게임 기록</td><td>게임 모드, 점수, 도달 레벨, 생존 시간, 기록 시각, 주차 정보</td><td>게임 종료 시 자동</td></tr>
+</table>
+<p>위 정보는 모두 <strong>선택적</strong>이며, 인터넷에 연결되지 않은 상태나 Firebase 연결이 실패한 경우에도 게임은 정상적으로 이용할 수 있습니다.</p>
+
+<h3>기기 내에만 저장되는 정보</h3>
+<p>개인 기록, 이어하기 데이터, 언어·소리·진동 설정, 튜토리얼 완료 여부는 이용자의 기기 내부 저장소(브라우저 localStorage)에만 저장되며 개발자 서버로 전송되지 않습니다. 앱을 삭제하면 함께 삭제됩니다.</p>
+
+<h2>2. 수집 목적</h2>
 <ul>
-  <li><b>기기 내 저장</b>: 최고 점수, 최근 기록, 닉네임 — 이용자의 기기(브라우저)에만 저장되며 외부로 전송되지 않습니다.</li>
-  <li><b>온라인 랭킹(선택)</b>: 이용자가 입력한 닉네임과 게임 점수가 랭킹 표시 목적으로 서버(Google Firebase)에 저장됩니다. 실명, 연락처, 위치 등 개인 식별 정보는 수집하지 않습니다.</li>
+<li>주간 온라인 랭킹(전세계 상위 50위) 표시</li>
+<li>동일 이용자의 기록을 주간 단위로 하나로 관리(사용자당 모드별 1건)</li>
+<li>랭킹 화면에서 본인 기록 강조 표시</li>
+</ul>
+<p>수집한 정보를 광고, 마케팅, 프로필 분석 등 위 목적 외의 용도로 사용하지 않습니다.</p>
+
+<h2>3. 보관 및 처리 위탁</h2>
+<p>수집한 정보는 Google LLC가 제공하는 <strong>Firebase(Cloud Firestore, Authentication)</strong>에 저장됩니다. Google은 개발자를 대신하여 데이터를 보관·처리하는 위탁업체이며, Google의 개인정보 보호 정책(<a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a>)이 함께 적용됩니다.</p>
+<p>모든 데이터는 <strong>HTTPS로 암호화되어 전송</strong>됩니다.</p>
+
+<h2>4. 제3자 제공 및 공유</h2>
+<p>개발자는 수집한 정보를 <strong>제3자에게 판매, 제공, 공유하지 않습니다.</strong> 다만 랭킹 화면에서 별명과 점수는 다른 이용자에게 공개적으로 표시됩니다. 익명 사용자 ID는 화면에 표시되지 않습니다.</p>
+
+<h2>5. 광고</h2>
+<p>현재 앱은 <strong>광고를 표시하지 않으며</strong> 광고 식별자를 수집하지 않습니다. 향후 광고를 도입하는 경우 이 방침을 개정하고 앱과 스토어 페이지를 통해 고지합니다.</p>
+
+<h2>6. 보관 기간</h2>
+<ul>
+<li>주간 랭킹 기록: 서비스 제공 기간 동안 보관하며, 주간 단위로 구분되어 이후 주차의 랭킹에는 표시되지 않습니다.</li>
+<li>이용자가 삭제를 요청한 경우: 요청 확인 후 지체 없이 삭제합니다.</li>
+<li>서비스 종료 시: 보관 중인 모든 데이터를 삭제합니다.</li>
 </ul>
 
-<h2>2. 광고</h2>
-<p>본 게임은 광고를 표시할 수 있으며, 광고 제공사(Google AdMob 등)가 광고 게재를 위해 광고 식별자 등의 정보를 처리할 수 있습니다. 자세한 내용은 Google 광고 정책(policies.google.com/technologies/ads)을 참고하세요.</p>
+<h2>7. 데이터 삭제 요청</h2>
+<div class="box">
+<p style="margin:0 0 6px"><strong>삭제 요청 방법</strong></p>
+<p style="margin:0">아래 이메일로 <strong>사용 중인 별명</strong>과 <strong>대략적인 마지막 플레이 시기</strong>를 알려주시면, 해당 기록(익명 ID, 별명, 게임 기록)을 서버에서 삭제합니다. 앱 자체를 삭제하실 필요는 없습니다.</p>
+<p style="margin:8px 0 0">이메일: <a href="mailto:chaejs21@gmail.com">chaejs21@gmail.com</a></p>
+</div>
+<p>기기 내에 저장된 정보는 앱을 삭제하거나 브라우저 데이터를 지우면 이용자가 직접 삭제할 수 있습니다.</p>
 
-<h2>3. 정보의 보관 및 삭제</h2>
-<p>기기 내 저장 정보는 브라우저/앱 데이터 삭제 시 함께 삭제됩니다. 온라인 랭킹에 등록된 닉네임·점수의 삭제를 원하시면 아래 연락처로 요청해 주세요.</p>
+<h2>8. 아동의 개인정보</h2>
+<p>앱은 만 14세 미만 아동을 대상으로 하지 않으며, 연령·생년월일 등을 수집하지 않습니다. 아동의 정보가 수집된 사실을 알게 되면 즉시 삭제합니다.</p>
 
-<h2>4. 아동의 개인정보</h2>
-<p>본 게임은 개인 식별 정보를 수집하지 않으며, 아동으로부터 어떠한 개인정보도 의도적으로 수집하지 않습니다.</p>
+<h2>9. 이용자의 권리</h2>
+<p>이용자는 언제든지 자신의 정보에 대한 열람·삭제를 요청할 수 있으며, 요청은 7항의 이메일로 접수합니다. 별명은 앱 안에서 직접 변경할 수 있습니다.</p>
 
-<h2>5. 문의</h2>
-<p>이메일: <b>chaejs21@gmail.com</b> (← 본인 이메일로 수정하세요)</p>
+<h2>10. 방침의 변경</h2>
+<p>이 방침은 법령이나 서비스 변경에 따라 개정될 수 있으며, 변경 시 이 페이지에 시행일과 함께 게시합니다.</p>
+
+<h2>11. 문의</h2>
+<p>개발자: Chae Lab<br>이메일: <a href="mailto:chaejs21@gmail.com">chaejs21@gmail.com</a></p>
+
+<hr class="sep">
+
+<h1>MoaTEN Privacy Policy</h1>
+<p class="meta">Developer: Chae Lab · Package: io.github.environe21_code.twa · Effective: September 29, 2026</p>
+
+<h2>1. Information We Collect</h2>
+<p>The app collects only the following to provide the weekly online leaderboard. We do <strong>not</strong> collect email, phone number, location, contacts, photos, or account credentials.</p>
+<table>
+<tr><th style="width:26%">Item</th><th>Details</th><th style="width:22%">How</th></tr>
+<tr><td>Anonymous user ID</td><td>A random identifier issued by Firebase Authentication (anonymous sign-in). Not linked to your name, email, or any personal identity.</td><td>Automatic on launch</td></tr>
+<tr><td>Nickname</td><td>A display name (up to 10 characters) you enter on the ranking screen. Nothing is stored if you don't enter one.</td><td>Optional, entered by you</td></tr>
+<tr><td>Game records</td><td>Game mode, score, level reached, survival time, timestamp, week</td><td>Automatic at game end</td></tr>
+</table>
+<p>All of the above is <strong>optional</strong>. The game works fully offline or when Firebase is unavailable.</p>
+<p>Personal records, resume data, language/sound/vibration settings, and tutorial status are stored only on your device (browser localStorage) and are never sent to our servers.</p>
+
+<h2>2. Purpose</h2>
+<ul><li>Displaying the weekly online leaderboard (top 50 worldwide)</li><li>Keeping one record per user per mode each week</li><li>Highlighting your own entry on the ranking screen</li></ul>
+<p>We do not use this data for advertising, marketing, or profiling.</p>
+
+<h2>3. Storage and Processors</h2>
+<p>Data is stored in <strong>Google Firebase (Cloud Firestore and Authentication)</strong>, operated by Google LLC as our data processor. Google's Privacy Policy (<a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a>) also applies. All data is transmitted over <strong>HTTPS encryption</strong>.</p>
+
+<h2>4. Sharing</h2>
+<p>We do <strong>not</strong> sell, share, or transfer your data to third parties. Your nickname and score are visible to other players on the leaderboard; the anonymous ID is never displayed.</p>
+
+<h2>5. Advertising</h2>
+<p>The app currently shows <strong>no ads</strong> and does not collect advertising identifiers. If ads are introduced, this policy will be updated and announced.</p>
+
+<h2>6. Retention</h2>
+<ul><li>Leaderboard records are kept while the service operates and are grouped by week.</li><li>Records are deleted promptly upon a verified deletion request.</li><li>All data is deleted if the service is discontinued.</li></ul>
+
+<h2>7. Data Deletion Requests</h2>
+<div class="box">
+<p style="margin:0">Email <a href="mailto:chaejs21@gmail.com">chaejs21@gmail.com</a> with your <strong>nickname</strong> and <strong>approximate last play date</strong>. We will delete the matching anonymous ID, nickname, and game records from the server. You do not need to uninstall the app.</p>
+</div>
+<p>On-device data can be removed by uninstalling the app or clearing browser data.</p>
+
+<h2>8. Children</h2>
+<p>The app is not directed at children under 14 and does not collect age or date of birth. If we learn that a child's data was collected, we will delete it immediately.</p>
+
+<h2>9. Your Rights</h2>
+<p>You may request access to or deletion of your data at any time via the email above. Your nickname can be changed directly in the app.</p>
+
+<h2>10. Changes</h2>
+<p>This policy may be updated for legal or service reasons. Changes will be posted on this page with a new effective date.</p>
+
+<h2>11. Contact</h2>
+<p>Chae Lab · <a href="mailto:chaejs21@gmail.com">chaejs21@gmail.com</a></p>
+
+</div>
 </body>
 </html>
