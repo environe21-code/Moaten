@@ -1,0 +1,57 @@
+MoaTEN (모아텐)
+Copyright (c) 2026 Chae Lab. All rights reserved.
+저작권 (c) 2026 Chae Lab. 모든 권리 보유.
+
+────────────────────────────────────────────────────────
+KOREAN / 한국어
+────────────────────────────────────────────────────────
+
+이 저장소와 그 안의 모든 파일(소스 코드, 그래픽, 아바타 생성 규칙, 사운드,
+텍스트, 레이아웃 등)은 Chae Lab의 저작물이며 저작권법의 보호를 받습니다.
+
+이 저장소가 공개 상태인 것은 GitHub Pages 호스팅을 위한 것일 뿐이며,
+오픈소스 라이선스를 부여하는 것이 아닙니다.
+
+허용되는 것
+  · 공식 웹 주소(https://environe21-code.github.io/Moaten/) 또는
+    Google Play 공식 앱(io.github.environe21_code.twa)을 통해 게임을 플레이하는 것
+  · 게임 화면을 캡처하여 개인적으로 공유하거나 리뷰·소개 목적으로 사용하는 것
+
+금지되는 것
+  · 파일의 전부 또는 일부를 복제·수정·번역·재호스팅·재배포하는 것
+  · 다른 이름이나 같은 이름으로 앱 스토어·웹에 재게시하는 것
+  · "모아텐", "MoaTEN", 앱 아이콘, 로고를 사용하는 것
+  · 공식 앱 이외의 경로로 랭킹 서버(Firebase)에 데이터를 기록하는 것
+  · 상업적 이용 일체
+
+위반 시 Google Play 저작권 신고(DMCA) 및 관련 법에 따라 대응합니다.
+문의: chaejs21@gmail.com
+
+────────────────────────────────────────────────────────
+ENGLISH
+────────────────────────────────────────────────────────
+
+All files in this repository (source code, graphics, avatar generation rules,
+sounds, text, layout, etc.) are the copyrighted work of Chae Lab.
+
+This repository is public solely for GitHub Pages hosting. Public visibility
+does NOT grant any open-source license.
+
+Permitted
+  · Playing the game via the official web address
+    (https://environe21-code.github.io/Moaten/) or the official Google Play app
+    (io.github.environe21_code.twa)
+  · Capturing screenshots for personal sharing, reviews, or coverage
+
+Prohibited
+  · Copying, modifying, translating, re-hosting, or redistributing any part
+    of these files
+  · Republishing the game on any app store or website under any name
+  · Using the names "MoaTEN" / "모아텐", the app icon, or the logo
+  · Writing to the ranking server (Firebase) from anything other than the
+    official app
+  · Any commercial use
+
+Violations will be addressed through Google Play copyright (DMCA) takedown
+and applicable law.
+Contact: chaejs21@gmail.com
